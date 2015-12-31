@@ -14,7 +14,7 @@ var (
 		"root1": {"child": %[1]s}}`, twoLevelJsonConfig)
 )
 
-func equalTest(t *testing.T, data string, path string, functors Functors) {
+func equalJsonTest(t *testing.T, data string, path string, functors Functors) {
 	config, err := newJsonConfig([]byte(data))
 	if err != nil {
 		t.Errorf("Cannot parse json-config: %v", err)
@@ -29,37 +29,37 @@ func equalTest(t *testing.T, data string, path string, functors Functors) {
 }
 
 // Tests.
-func TestCreateEmpty(t *testing.T) {
+func TestCreateEmptyJson(t *testing.T) {
 	_, err := newJsonConfig([]byte("{}"))
 	if err != nil {
 		t.Errorf("Cannot parse empty json-config: %v", err)
 	}
 }
 
-func TestOneLevel(t *testing.T) {
+func TestOneLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalTest(t, oneLevelJsonConfig, element, functors)
+		equalJsonTest(t, oneLevelJsonConfig, element, functors)
 	}
 }
 
-func TestTwoLevel(t *testing.T) {
+func TestTwoLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalTest(t, twoLevelJsonConfig, joinPath("first", element), functors)
-		equalTest(t, twoLevelJsonConfig, joinPath("second", element), functors)
+		equalJsonTest(t, twoLevelJsonConfig, joinPath("first", element), functors)
+		equalJsonTest(t, twoLevelJsonConfig, joinPath("second", element), functors)
 	}
 }
 
-func TestManyLevel(t *testing.T) {
+func TestManyLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/first", element), functors)
-		equalTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/second", element), functors)
+		equalJsonTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/first", element), functors)
+		equalJsonTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/second", element), functors)
 	}
 }
 
-func TestManyLevelGetValue(t *testing.T) {
+func TestManyLevelJsonGetValue(t *testing.T) {
 	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
 	if err != nil {
-		t.Errorf("Cannot parse root json-config: %v", err)
+		t.Errorf("Cannot parse json-config: %v", err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func TestManyLevelGetValue(t *testing.T) {
 	checkIntValue(t, value.IntElement)
 }
 
-func TestManyLevelConfigPart(t *testing.T) {
+func TestManyLevelJsonGetConfigPart(t *testing.T) {
 	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
 	if err != nil {
 		t.Errorf("Cannot parse root json-config: %v", err)

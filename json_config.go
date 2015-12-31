@@ -2,7 +2,6 @@ package config
 
  import (
 	"encoding/json"
-	"strings"
 	"errors"
 	"math"
  )
@@ -66,7 +65,7 @@ func (c *jsonConfig) GetInt(path string) (value int64, err error) {
 	if !converted {
 		return value, errors.New("Value is not int")
 	}
-	// Check is value integer.
+	// Check that value is integer.
 	if math.Abs(math.Trunc(floatingValue) - floatingValue) < math.Nextafter(0, 1) {
 		return int64(floatingValue), nil
 	}
@@ -96,12 +95,11 @@ func (c *jsonConfig) LoadValue(path string, value interface{}) (err error) {
 func (c *jsonConfig) FindElement(path string) (interface{}, error) {
 	var element interface{}
 	element = c.data
-	path = strings.Trim(path, PATH_DELIMITER)
-	for _, pathPart := range strings.Split(path, PATH_DELIMITER) {
+	for _, pathPart := range splitPath(path) {
 		if part, ok := element.(map[string]interface{}); ok {
 			element = part[pathPart]
 		} else {
-			return nil, errors.New("Not found")
+			return nil, ErrorNotFound
 		}
 	}
 	return element, nil

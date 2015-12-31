@@ -1,5 +1,9 @@
 package config
-import "path"
+import (
+	"path"
+	"strings"
+	"errors"
+)
 
 const (
 	INI = "ini"
@@ -8,6 +12,10 @@ const (
 	YAML = "yaml"
 
 	PATH_DELIMITER = "/"
+)
+
+var (
+	ErrorNotFound = errors.New("Not found")
 )
 
 type Config interface {
@@ -29,4 +37,9 @@ func ReadConfig(configPath string) (config *Config, err error) {
 
 func ReadTypedConfig(configPath string, configType string) (config *Config, err error) {
 	return nil, nil
+}
+
+func splitPath(path string) ([]string) {
+	path = strings.Trim(path, PATH_DELIMITER)
+	return strings.Split(path, PATH_DELIMITER)
 }
