@@ -16,6 +16,7 @@ const (
 
 var (
 	ErrorNotFound = errors.New("Not found")
+	ErrorIncorrectPath = errors.New("Incorrect path")
 )
 
 type Config interface {
@@ -41,5 +42,8 @@ func ReadTypedConfig(configPath string, configType string) (config *Config, err 
 
 func splitPath(path string) ([]string) {
 	path = strings.Trim(path, PATH_DELIMITER)
-	return strings.Split(path, PATH_DELIMITER)
+	if len(path) > 0 {
+		return strings.Split(path, PATH_DELIMITER)
+	}
+	return []string{}
 }
