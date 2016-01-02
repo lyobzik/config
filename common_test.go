@@ -68,8 +68,8 @@ var (
 
 // Settings structure used in tests.
 type configData struct {
-	StringElement string
-	BoolElement bool
-	FloatElement float64
-	IntElement int64
+	StringElement string `ini:"stringElement"`
+	BoolElement bool `ini:"boolElement"`
+	FloatElement float64 `ini:"floatElement"`
+	IntElement int64 `ini:"intElement"`
 }
