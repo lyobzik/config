@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/xml"
 	"strings"
-	"errors"
 	"bytes"
 	"unicode"
 	"io"
@@ -107,11 +106,7 @@ func (c *xmlConfig) GetBool(path string) (value bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	value, err = strconv.ParseBool(stringValue)
-	if err != nil {
-		return false, errors.New("Value is not bool")
-	}
-	return value, nil
+	return parseXmlBool(stringValue)
 }
 
 func (c *xmlConfig) GetFloat(path string) (value float64, err error) {
@@ -119,11 +114,7 @@ func (c *xmlConfig) GetFloat(path string) (value float64, err error) {
 	if err != nil {
 		return 0.0, err
 	}
-	value, err = strconv.ParseFloat(stringValue, 64)
-	if err != nil {
-		return 0.0, errors.New("Value is not float")
-	}
-	return value, nil
+	return parseXmlFloat(stringValue)
 }
 
 func (c *xmlConfig) GetInt(path string) (value int64, err error) {
@@ -131,11 +122,60 @@ func (c *xmlConfig) GetInt(path string) (value int64, err error) {
 	if err != nil {
 		return 0, err
 	}
-	value, err = strconv.ParseInt(stringValue, 10, 64)
+	return parseXmlInt(stringValue)
+}
+
+func (c *xmlConfig) GetStrings(path string, delim string) (value []string, err error) {
+	stringValue, err := c.GetString(path)
 	if err != nil {
-		return 0, errors.New("Value is not int")
+		return value, err
 	}
-	return value, nil
+	if len(stringValue) == 0 {
+		return make([]string, 0), nil
+	}
+	return strings.Split(stringValue, delim), nil
+}
+
+func (c *xmlConfig) GetBools(path string, delim string) (value []bool, err error) {
+	stringValues, err := c.GetStrings(path, delim)
+	if err != nil {
+		return value, err
+	}
+	resultValue := make([]bool, len(stringValues))
+	for i := range stringValues {
+		if resultValue[i], err = parseXmlBool(stringValues[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *xmlConfig) GetFloats(path string, delim string) (value []float64, err error) {
+	stringValues, err := c.GetStrings(path, delim)
+	if err != nil {
+		return value, err
+	}
+	resultValue := make([]float64, len(stringValues))
+	for i := range stringValues {
+		if resultValue[i], err = parseXmlFloat(stringValues[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *xmlConfig) GetInts(path string, delim string) (value []int64, err error) {
+	stringValues, err := c.GetStrings(path, delim)
+	if err != nil {
+		return value, err
+	}
+	resultValue := make([]int64, len(stringValues))
+	for i := range stringValues {
+		if resultValue[i], err = parseXmlInt(stringValues[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
 }
 
 func (c *xmlConfig) GetConfigPart(path string) (Config, error) {
@@ -179,4 +219,29 @@ func (c *xmlConfig) FindElement(path string) (*xmlElement, string, error) {
 		}
 	}
 	return element, "", nil
+}
+
+// Helpers.
+func parseXmlBool(data string) (value bool, err error) {
+	value, err = strconv.ParseBool(data)
+	if err != nil {
+		return false, ErrorIncorrectValueType
+	}
+	return value, nil
+}
+
+func parseXmlFloat(data string) (value float64, err error) {
+	value, err = strconv.ParseFloat(data, 64)
+	if err != nil {
+		return 0.0, ErrorIncorrectValueType
+	}
+	return value, nil
+}
+
+func parseXmlInt(data string) (value int64, err error) {
+	value, err = strconv.ParseInt(data, 10, 64)
+	if err != nil {
+		return 0, ErrorIncorrectValueType
+	}
+	return value, nil
 }

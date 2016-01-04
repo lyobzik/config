@@ -8,7 +8,9 @@ import (
 
 var (
 	oneLevelIniConfig = "stringElement=value\nboolElement=true\n" +
-		"floatElement=1.23456\nintElement=123456"
+		"floatElement=1.23456\nintElement=123456\n" +
+		"stringElements=value1 value2 value3\nboolElements=true false true\n" +
+		"floatElements=1.23 4.56 7.89\nintElements=123 456 789"
 	twoLevelIniConfig = fmt.Sprintf("[first]\n%[1]s\n[second]\n%[1]s", oneLevelIniConfig)
 )
 

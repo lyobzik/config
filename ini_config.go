@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	ini "gopkg.in/ini.v1"
+	"strconv"
 )
 
 type iniConfig struct {
@@ -64,6 +65,46 @@ func (c *iniConfig) GetInt(path string) (value int64, err error) {
 		return value, err
 	}
 	return key.Int64()
+}
+
+func (c *iniConfig) GetStrings(path string, delim string) (value []string, err error) {
+	key, err := c.FindKey(path)
+	if err != nil {
+		return value, err
+	}
+	return key.Strings(delim), nil
+}
+
+func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error) {
+	key, err := c.FindKey(path)
+	if err != nil {
+		return value, err
+	}
+	stringValues := key.Strings(delim)
+	value = make([]bool, len(stringValues))
+	for i := range stringValues {
+		value[i], err = strconv.ParseBool(stringValues[i])
+		if err != nil {
+			return value, err
+		}
+	}
+	return value, nil
+}
+
+func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err error) {
+	key, err := c.FindKey(path)
+	if err != nil {
+		return value, err
+	}
+	return key.Float64s(delim), nil
+}
+
+func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error) {
+	key, err := c.FindKey(path)
+	if err != nil {
+		return value, err
+	}
+	return key.Int64s(delim), nil
 }
 
 func (c *iniConfig) GetConfigPart(path string) (Config, error) {

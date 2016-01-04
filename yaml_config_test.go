@@ -9,7 +9,9 @@ import (
 
 var (
 	oneLevelYamlConfig = "stringElement: value\nboolElement: true\n" +
-		"floatElement: 1.23456\nintElement: 123456"
+		"floatElement: 1.23456\nintElement: 123456\n" +
+		"stringElements: [value1, value2, value3]\nboolElements: [true, false, true]\n" +
+		"floatElements: [1.23, 4.56, 7.89]\nintElements: [123, 456, 789]"
 	twoLevelYamlConfig = fmt.Sprintf("first: %[1]s\nsecond: %[1]s",
 		strings.Replace("\n" + oneLevelYamlConfig, "\n", "\n  ", -1))
 	manyLevelYamlConfig = fmt.Sprintf("root:\n  child1: %[1]s\n  child:\n    grandchild: %[2]s\n" +

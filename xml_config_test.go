@@ -8,7 +8,11 @@ import (
 
 const (
 	xmlConfigPart = `<stringElement>value</stringElement><boolElement>true</boolElement>
-		<floatElement>1.23456</floatElement><intElement>123456</intElement>`
+		<floatElement>1.23456</floatElement><intElement>123456</intElement>
+		<stringElements>value1 value2 value3</stringElements>
+		<boolElements>true false true</boolElements>
+		<floatElements>1.23 4.56 7.89</floatElements>
+		<intElements>123 456 789</intElements>`
 )
 
 var (

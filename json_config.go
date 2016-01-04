@@ -2,7 +2,6 @@ package config
 
  import (
 	"encoding/json"
-	"errors"
 	"math"
  )
 
@@ -28,10 +27,7 @@ func (c *jsonConfig) GetString(path string) (value string, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(string); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not string")
+	return parseJsonString(element)
 }
 
 func (c *jsonConfig) GetBool(path string) (value bool, err error) {
@@ -39,10 +35,7 @@ func (c *jsonConfig) GetBool(path string) (value bool, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(bool); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not bool")
+	return parseJsonBool(element)
 }
 
 func (c *jsonConfig) GetFloat(path string) (value float64, err error) {
@@ -50,10 +43,7 @@ func (c *jsonConfig) GetFloat(path string) (value float64, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(float64); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not float64")
+	return parseJsonFloat(element)
 }
 
 func (c *jsonConfig) GetInt(path string) (value int64, err error) {
@@ -61,15 +51,79 @@ func (c *jsonConfig) GetInt(path string) (value int64, err error) {
 	if err != nil {
 		return value, err
 	}
-	floatingValue, converted := element.(float64)
+	return parseJsonInt(element)
+}
+
+func (c *jsonConfig) GetStrings(path string, delim string) (value []string, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
 	if !converted {
-		return value, errors.New("Value is not int")
+		return value, ErrorIncorrectValueType
 	}
-	// Check that value is integer.
-	if math.Abs(math.Trunc(floatingValue) - floatingValue) < math.Nextafter(0, 1) {
-		return int64(floatingValue), nil
+	resultValue := make([]string, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseJsonString(arrayValue[i]); err != nil {
+			return value, err
+		}
 	}
-	return value, errors.New("Value is not int")
+	return resultValue, nil
+}
+
+func (c *jsonConfig) GetBools(path string, delim string) (value []bool, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]bool, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseJsonBool(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *jsonConfig) GetFloats(path string, delim string) (value []float64, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]float64, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseJsonFloat(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *jsonConfig) GetInts(path string, delim string) (value []int64, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]int64, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseJsonInt(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
 }
 
 func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
@@ -107,4 +161,38 @@ func (c *jsonConfig) FindElement(path string) (interface{}, error) {
 		}
 	}
 	return element, nil
+}
+
+// Helpers.
+func parseJsonString(data interface{}) (value string, err error) {
+	if value, converted := data.(string); converted {
+		return value, err
+	}
+	return value, ErrorIncorrectValueType
+}
+
+func parseJsonBool(data interface{}) (value bool, err error) {
+	if value, converted := data.(bool); converted {
+		return value, err
+	}
+	return value, ErrorIncorrectValueType
+}
+
+func parseJsonFloat(data interface{}) (value float64, err error) {
+	if value, converted := data.(float64); converted {
+		return value, err
+	}
+	return value, ErrorIncorrectValueType
+}
+
+func parseJsonInt(data interface{}) (value int64, err error) {
+	floatingValue, converted := data.(float64)
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	// Check that value is integer.
+	if math.Abs(math.Trunc(floatingValue) - floatingValue) < math.Nextafter(0, 1) {
+		return int64(floatingValue), nil
+	}
+	return value, ErrorIncorrectValueType
 }

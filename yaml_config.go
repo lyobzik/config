@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"math"
 
 	yaml "gopkg.in/yaml.v2"
@@ -29,10 +28,7 @@ func (c *yamlConfig) GetString(path string) (value string, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(string); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not string")
+	return parseYamlString(element)
 }
 
 func (c *yamlConfig) GetBool(path string) (value bool, err error) {
@@ -40,10 +36,7 @@ func (c *yamlConfig) GetBool(path string) (value bool, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(bool); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not bool")
+	return parseYamlBool(element)
 }
 
 func (c *yamlConfig) GetFloat(path string) (value float64, err error) {
@@ -51,10 +44,7 @@ func (c *yamlConfig) GetFloat(path string) (value float64, err error) {
 	if err != nil {
 		return value, err
 	}
-	if value, converted := element.(float64); converted {
-		return value, err
-	}
-	return value, errors.New("Value is not float64")
+	return parseYamlFloat(element)
 }
 
 func (c *yamlConfig) GetInt(path string) (value int64, err error) {
@@ -62,19 +52,79 @@ func (c *yamlConfig) GetInt(path string) (value int64, err error) {
 	if err != nil {
 		return value, err
 	}
-	switch elementValue := element.(type) {
-	case int:
-		return int64(elementValue), nil
-	case int64:
-		return int64(elementValue), nil
-	case float64:
-		// Check that value is integer.
-		if math.Abs(math.Trunc(elementValue) - elementValue) < math.Nextafter(0, 1) {
-			return int64(elementValue), nil
-		}
-		return value, errors.New("Value is not int")
+	return parseYamlInt(element)
+}
+
+func (c *yamlConfig) GetStrings(path string, delim string) (value []string, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
 	}
-	return value, errors.New("Value is not int")
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]string, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseYamlString(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *yamlConfig) GetBools(path string, delim string) (value []bool, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]bool, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseYamlBool(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *yamlConfig) GetFloats(path string, delim string) (value []float64, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]float64, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseYamlFloat(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
+}
+
+func (c *yamlConfig) GetInts(path string, delim string) (value []int64, err error) {
+	element, err := c.FindElement(path)
+	if err != nil {
+		return value, err
+	}
+	arrayValue, converted := element.([]interface{})
+	if !converted {
+		return value, ErrorIncorrectValueType
+	}
+	resultValue := make([]int64, len(arrayValue))
+	for i := range arrayValue {
+		if resultValue[i], err = parseYamlInt(arrayValue[i]); err != nil {
+			return value, err
+		}
+	}
+	return resultValue, nil
 }
 
 func (c *yamlConfig) GetConfigPart(path string) (Config, error) {
@@ -112,4 +162,33 @@ func (c *yamlConfig) FindElement(path string) (interface{}, error) {
 		}
 	}
 	return element, nil
+}
+
+// Helpers.
+func parseYamlString(data interface{}) (value string, err error) {
+	return parseJsonString(data)
+}
+
+func parseYamlBool(data interface{}) (value bool, err error) {
+	return parseJsonBool(data)
+}
+
+func parseYamlFloat(data interface{}) (value float64, err error) {
+	return parseJsonFloat(data)
+}
+
+func parseYamlInt(data interface{}) (value int64, err error) {
+	switch dataValue := data.(type) {
+	case int:
+		return int64(dataValue), nil
+	case int64:
+		return int64(dataValue), nil
+	case float64:
+		// Check that value is integer.
+		if math.Abs(math.Trunc(dataValue) - dataValue) < math.Nextafter(0, 1) {
+			return int64(dataValue), nil
+		}
+		return value, ErrorIncorrectValueType
+	}
+	return value, ErrorIncorrectValueType
 }
