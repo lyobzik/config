@@ -65,25 +65,30 @@ func TestManyLevelXml(t *testing.T) {
 	}
 }
 
-//func TestManyLevelXmlGetValue(t *testing.T) {
-//	config, err := newXmlConfig([]byte(manyLevelXmlConfig))
-//	if err != nil {
-//		t.Errorf("Cannot parse xml-config: %v", err)
-//		return
-//	}
-//
-//	value := configData{}
-//	err = config.LoadValue("/xml/root/child/grandchild/first", &value)
-//	if err != nil {
-//		t.Errorf("Cannot load value from config: %v", err)
-//		return
-//	}
-//
-//	checkStringValue(t, value.StringElement)
-//	checkBoolValue(t, value.BoolElement)
-//	checkFloatValue(t, value.FloatElement)
-//	checkIntValue(t, value.IntElement)
-//}
+func TestManyLevelXmlGetValue(t *testing.T) {
+	config, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	if err != nil {
+		t.Errorf("Cannot parse xml-config: %v", err)
+		return
+	}
+
+	value := configData{}
+	err = LoadValue(config, "/xml/root/child/grandchild/first", &value)
+	if err != nil {
+		t.Errorf("Cannot load value from config: %v", err)
+		return
+	}
+
+	checkStringValue(t, value.StringElement)
+	checkBoolValue(t, value.BoolElement)
+	checkFloatValue(t, value.FloatElement)
+	checkIntValue(t, value.IntElement)
+
+	checkStringValues(t, value.StringElements)
+	checkBoolValues(t, value.BoolElements)
+	checkFloatValues(t, value.FloatElements)
+	checkIntValues(t, value.IntElements)
+}
 
 func TestManyLevelXmlGetConfigPart(t *testing.T) {
 	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))

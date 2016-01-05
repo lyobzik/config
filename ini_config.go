@@ -22,6 +22,10 @@ func newIniConfig(data []byte) (Config, error) {
 	return &iniConfig{file: file}, nil
 }
 
+func (c *iniConfig) GetType() string {
+	return INI
+}
+
 func (c *iniConfig) GetValue(path string) (value interface{}, err error) {
 	configPart, err := c.GetConfigPart(path)
 	if err != nil {
@@ -158,23 +162,6 @@ func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 		return nil, ErrorNotFound
 	}
 	return &iniConfig{key: key}, nil
-}
-
-func (c *iniConfig) LoadValue(path string, value interface{}) (err error) {
-	configPart, err := c.GetConfigPart(path)
-	if err != nil {
-		return err
-	}
-	iniConfigPart := configPart.(*iniConfig)
-	if iniConfigPart.key != nil {
-		return errors.New("Not implemented")
-	}
-
-	if iniConfigPart.section != nil {
-		return iniConfigPart.section.MapTo(value)
-	}
-
-	return iniConfigPart.file.MapTo(value)
 }
 
 func (c *iniConfig) FindKey(path string) (*ini.Key, error) {

@@ -19,6 +19,10 @@ func newYamlConfig(data []byte) (Config, error) {
 	return &config, nil
 }
 
+func (c *yamlConfig) GetType() string {
+	return YAML
+}
+
 func (c *yamlConfig) GetValue(path string) (value interface{}, err error) {
 	return c.FindElement(path)
 }
@@ -133,18 +137,6 @@ func (c *yamlConfig) GetConfigPart(path string) (Config, error) {
 		return nil, err
 	}
 	return &yamlConfig{data: element}, nil
-}
-
-func (c *yamlConfig) LoadValue(path string, value interface{}) (err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return err
-	}
-	serializedElement, err := yaml.Marshal(element)
-	if err != nil {
-		return err
-	}
-	return yaml.Unmarshal(serializedElement, value)
 }
 
 func (c *yamlConfig) FindElement(path string) (interface{}, error) {

@@ -62,25 +62,30 @@ func TestManyLevelYaml(t *testing.T) {
 	}
 }
 
-//func TestManyLevelYamlGetValue(t *testing.T) {
-//	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
-//	if err != nil {
-//		t.Errorf("Cannot parse yaml-config: %v", err)
-//		return
-//	}
-//
-//	value := configData{}
-//	err = config.LoadValue("/root/child/grandchild/first", &value)
-//	if err != nil {
-//		t.Errorf("Cannot load value from config: %v", err)
-//		return
-//	}
-//
-//	checkStringValue(t, value.StringElement)
-//	checkBoolValue(t, value.BoolElement)
-//	checkFloatValue(t, value.FloatElement)
-//	checkIntValue(t, value.IntElement)
-//}
+func TestManyLevelYamlGetValue(t *testing.T) {
+	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	if err != nil {
+		t.Errorf("Cannot parse yaml-config: %v", err)
+		return
+	}
+
+	value := configData{}
+	err = LoadValue(config, "/root/child/grandchild/first", &value)
+	if err != nil {
+		t.Errorf("Cannot load value from config: %v", err)
+		return
+	}
+
+	checkStringValue(t, value.StringElement)
+	checkBoolValue(t, value.BoolElement)
+	checkFloatValue(t, value.FloatElement)
+	checkIntValue(t, value.IntElement)
+
+	checkStringValues(t, value.StringElements)
+	checkBoolValues(t, value.BoolElements)
+	checkFloatValues(t, value.FloatElements)
+	checkIntValues(t, value.IntElements)
+}
 
 func TestManyLevelYamlGetConfigPart(t *testing.T) {
 	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))

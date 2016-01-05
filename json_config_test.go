@@ -60,7 +60,7 @@ func TestManyLevelJson(t *testing.T) {
 	}
 }
 
-func TestManyLevelJsonGetValue(t *testing.T) {
+func TestManyLevelJsonLoadValue(t *testing.T) {
 	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
 	if err != nil {
 		t.Errorf("Cannot parse json-config: %v", err)
@@ -68,7 +68,7 @@ func TestManyLevelJsonGetValue(t *testing.T) {
 	}
 
 	value := configData{}
-	err = config.LoadValue("/root/child/grandchild/first", &value)
+	err = LoadValue(config, "/root/child/grandchild/first", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from config: %v", err)
 		return
@@ -78,6 +78,11 @@ func TestManyLevelJsonGetValue(t *testing.T) {
 	checkBoolValue(t, value.BoolElement)
 	checkFloatValue(t, value.FloatElement)
 	checkIntValue(t, value.IntElement)
+
+	checkStringValues(t, value.StringElements)
+	checkBoolValues(t, value.BoolElements)
+	checkFloatValues(t, value.FloatElements)
+	checkIntValues(t, value.IntElements)
 }
 
 func TestManyLevelJsonGetConfigPart(t *testing.T) {

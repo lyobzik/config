@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"time"
+	"reflect"
 )
 
 const (
@@ -23,9 +24,14 @@ var (
 	ErrorIncorrectPath = errors.New("Incorrect path")
 	ErrorUnknownConfigType = errors.New("Unknown config type")
 	ErrorIncorrectValueType = errors.New("Incorrect value type")
+	ErrorUnsupportedFieldType = errors.New("Unsupported field type")
+	ErrorIncorrectValueToLoadConfig = errors.New("Inccorect value to load config")
+
 )
 
 type Config interface {
+	GetType() string
+
 	GetValue(path string) (value interface{}, err error)
 
 	GetString(path string) (value string, err error)
@@ -39,8 +45,6 @@ type Config interface {
 	GetInts(path string, delim string) (value []int64, err error)
 
 	GetConfigPart(path string) (config Config, err error)
-
-	LoadValue(path string, value interface{}) (err error)
 }
 
 // Functions to create config object.
@@ -110,7 +114,7 @@ func GetTimes(c Config, path string, delim string) (value []time.Time, err error
 	return GetTimesFormat(c, path, time.RFC3339, delim)
 }
 
-func GetTimesFormat(c Config, path string, format string, delim string) (value time.Time, err error) {
+func GetTimesFormat(c Config, path string, format string, delim string) (value []time.Time, err error) {
 	stringValues, err := c.GetStrings(path, delim)
 	if err != nil {
 		return value, err
@@ -122,4 +126,12 @@ func GetTimesFormat(c Config, path string, format string, delim string) (value t
 		}
 	}
 	return resultValue, nil
+}
+
+func LoadValue(c Config, path string, value interface{}) (err error) {
+	val := reflect.ValueOf(value)
+	if val.Kind() != reflect.Ptr || !val.Elem().CanAddr() || !val.Elem().CanSet() {
+		return ErrorIncorrectValueToLoadConfig
+	}
+	return loadValue(c, path, val.Elem())
 }

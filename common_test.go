@@ -3,7 +3,6 @@ package config
 import (
 	"reflect"
 	"testing"
-	"strings"
 )
 
 // Helpers to get and check values.
@@ -11,14 +10,6 @@ func checkEqual(t *testing.T, value, expected interface{}) {
 	if !reflect.DeepEqual(value, expected) {
 		t.Errorf("Incorrect value: expected - %v, actual - %v",  expected, value)
 	}
-}
-
-func joinPath(pathParts ...string) string {
-	path := strings.Join(pathParts, "/")
-	if strings.HasPrefix(path, "/") {
-		return path
-	}
-	return "/" + path
 }
 
 func getStringValue(config Config, path string) (interface{}, error) {
@@ -104,8 +95,14 @@ var (
 
 // Settings structure used in tests.
 type configData struct {
-	StringElement string `ini:"stringElement"`
-	BoolElement bool `ini:"boolElement"`
-	FloatElement float64 `ini:"floatElement"`
-	IntElement int64 `ini:"intElement"`
+	StringElement string `ini:"stringElement" xml:"stringElement" json:"stringElement" yaml:"stringElement"`
+	BoolElement bool `ini:"boolElement" xml:"boolElement" json:"boolElement" yaml:"boolElement"`
+	FloatElement float64 `ini:"floatElement" xml:"floatElement" json:"floatElement" yaml:"floatElement"`
+	IntElement int64 `ini:"intElement" xml:"intElement" json:"intElement" yaml:"intElement"`
+
+	StringElements []string `ini:"stringElements" xml:"stringElements" json:"stringElements" yaml:"stringElements"`
+	BoolElements []bool `ini:"boolElements" xml:"boolElements" json:"boolElements" yaml:"boolElements"`
+	FloatElements []float64 `ini:"floatElements" xml:"floatElements" json:"floatElements" yaml:"floatElements"`
+	IntElements []int64 `ini:"intElements" xml:"intElements" json:"intElements" yaml:"intElements"`
+
 }

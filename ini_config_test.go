@@ -49,25 +49,30 @@ func TestTwoLevelIni(t *testing.T) {
 	}
 }
 
-//func TestTwoLevelIniGetValue(t *testing.T) {
-//	config, err := newIniConfig([]byte(twoLevelIniConfig))
-//	if err != nil {
-//		t.Errorf("Cannot parse ini-config: %v", err)
-//		return
-//	}
-//
-//	value := configData{}
-//	err = config.LoadValue("/first", &value)
-//	if err != nil {
-//		t.Errorf("Cannot load value from config: %v", err)
-//		return
-//	}
-//
-//	checkStringValue(t, value.StringElement)
-//	checkBoolValue(t, value.BoolElement)
-//	checkFloatValue(t, value.FloatElement)
-//	checkIntValue(t, value.IntElement)
-//}
+func TestTwoLevelIniGetValue(t *testing.T) {
+	config, err := newIniConfig([]byte(twoLevelIniConfig))
+	if err != nil {
+		t.Errorf("Cannot parse ini-config: %v", err)
+		return
+	}
+
+	value := configData{}
+	err = LoadValue(config, "/first", &value)
+	if err != nil {
+		t.Errorf("Cannot load value from config: %v", err)
+		return
+	}
+
+	checkStringValue(t, value.StringElement)
+	checkBoolValue(t, value.BoolElement)
+	checkFloatValue(t, value.FloatElement)
+	checkIntValue(t, value.IntElement)
+
+	checkStringValues(t, value.StringElements)
+	checkBoolValues(t, value.BoolElements)
+	checkFloatValues(t, value.FloatElements)
+	checkIntValues(t, value.IntElements)
+}
 
 func TestTwoLevelIniGetConfigPart(t *testing.T) {
 	expectedConfig, err := newIniConfig([]byte(oneLevelIniConfig))
@@ -76,7 +81,7 @@ func TestTwoLevelIniGetConfigPart(t *testing.T) {
 		return
 	}
 	expectedValue := configData{}
-	err = expectedConfig.LoadValue("/", &expectedValue)
+	err = LoadValue(expectedConfig, "/", &expectedValue)
 	if err != nil {
 		t.Errorf("Cannot load value from expected ini-config: %v", err)
 		return
@@ -93,7 +98,7 @@ func TestTwoLevelIniGetConfigPart(t *testing.T) {
 		return
 	}
 	value := configData{}
-	err = configPart.LoadValue("/", &value)
+	err = LoadValue(configPart, "/", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from ini-config: %v", err)
 		return

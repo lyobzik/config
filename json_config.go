@@ -18,6 +18,10 @@ func newJsonConfig(data []byte) (Config, error) {
 	return &config, nil
 }
 
+func (c *jsonConfig) GetType() string {
+	return JSON
+}
+
 func (c *jsonConfig) GetValue(path string) (value interface{}, err error) {
 	return c.FindElement(path)
 }
@@ -132,18 +136,6 @@ func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
 		return nil, err
 	}
 	return &jsonConfig{data: element}, nil
-}
-
-func (c *jsonConfig) LoadValue(path string, value interface{}) (err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return err
-	}
-	serializedElement, err := json.Marshal(element)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(serializedElement, value)
 }
 
 func (c *jsonConfig) FindElement(path string) (interface{}, error) {

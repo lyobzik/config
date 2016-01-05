@@ -86,6 +86,10 @@ func newXmlConfig(data []byte) (Config, error) {
 	return &xmlConfig{data: xmlRoot}, nil
 }
 
+func (c *xmlConfig) GetType() string {
+	return XML
+}
+
 func (c *xmlConfig) GetValue(path string) (value interface{}, err error) {
 	return c.GetString(path)
 }
@@ -187,19 +191,6 @@ func (c *xmlConfig) GetConfigPart(path string) (Config, error) {
 		return nil, ErrorNotFound
 	}
 	return &xmlConfig{data: element}, nil
-}
-
-func (c *xmlConfig) LoadValue(path string, value interface{}) (err error) {
-	return ErrorNotFound
-//	element, err := c.FindElement(path)
-//	if err != nil {
-//		return err
-//	}
-//	serializedElement, err := xml.Marshal(element)
-//	if err != nil {
-//		return err
-//	}
-//	return xml.Unmarshal(serializedElement, value)
 }
 
 func (c *xmlConfig) FindElement(path string) (*xmlElement, string, error) {
