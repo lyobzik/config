@@ -90,6 +90,7 @@ func (c *xmlConfig) GetType() string {
 	return XML
 }
 
+// Grabbers.
 func (c *xmlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	if element, err := c.GetString(path); err == nil {
 		return grabber(element)
@@ -114,8 +115,9 @@ func (c *xmlConfig) GrabValues(path string, delim string,
 	return nil
 }
 
+// Get single value.
 func (c *xmlConfig) GetString(path string) (value string, err error) {
-	element, attribute, err := c.FindElement(path)
+	element, attribute, err := c.findElement(path)
 	if err != nil {
 		return "", nil
 	}
@@ -146,6 +148,7 @@ func (c *xmlConfig) GetInt(path string) (value int64, err error) {
 	})
 }
 
+// Get array of values.
 func (c *xmlConfig) GetStrings(path string, delim string) (value []string, err error) {
 	stringValue, err := c.GetString(path)
 	if err != nil {
@@ -193,8 +196,9 @@ func (c *xmlConfig) GetInts(path string, delim string) (value []int64, err error
 		})
 }
 
+// Get subconfig.
 func (c *xmlConfig) GetConfigPart(path string) (Config, error) {
-	element, _, err := c.FindElement(path)
+	element, _, err := c.findElement(path)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +208,8 @@ func (c *xmlConfig) GetConfigPart(path string) (Config, error) {
 	return &xmlConfig{data: element}, nil
 }
 
-func (c *xmlConfig) FindElement(path string) (*xmlElement, string, error) {
+// Xml helpers.
+func (c *xmlConfig) findElement(path string) (*xmlElement, string, error) {
 	var element *xmlElement
 	element = c.data
 	for _, pathPart := range splitPath(path) {
@@ -223,7 +228,7 @@ func (c *xmlConfig) FindElement(path string) (*xmlElement, string, error) {
 	return element, "", nil
 }
 
-// Helpers.
+// Xml value parsers.
 func parseXmlBool(data string) (value bool, err error) {
 	value, err = strconv.ParseBool(data)
 	if err != nil {

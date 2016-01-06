@@ -24,6 +24,7 @@ func (c *iniConfig) GetType() string {
 	return INI
 }
 
+// Grabbers.
 func (c *iniConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	value, err := c.GetString(path)
 	if err != nil {
@@ -48,8 +49,9 @@ func (c *iniConfig) GrabValues(path string, delim string,
 	return nil
 }
 
+// Get single value.
 func (c *iniConfig) GetString(path string) (value string, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
@@ -57,7 +59,7 @@ func (c *iniConfig) GetString(path string) (value string, err error) {
 }
 
 func (c *iniConfig) GetBool(path string) (value bool, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
@@ -65,7 +67,7 @@ func (c *iniConfig) GetBool(path string) (value bool, err error) {
 }
 
 func (c *iniConfig) GetFloat(path string) (value float64, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
@@ -73,15 +75,16 @@ func (c *iniConfig) GetFloat(path string) (value float64, err error) {
 }
 
 func (c *iniConfig) GetInt(path string) (value int64, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
 	return key.Int64()
 }
 
+// Get array of values.
 func (c *iniConfig) GetStrings(path string, delim string) (value []string, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
@@ -101,7 +104,7 @@ func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error
 }
 
 func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
@@ -109,13 +112,14 @@ func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err e
 }
 
 func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error) {
-	key, err := c.FindKey(path)
+	key, err := c.findKey(path)
 	if err != nil {
 		return value, err
 	}
 	return key.Int64s(delim), nil
 }
 
+// Get subconfig.
 func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 	pathParts := splitPath(path)
 	if len(pathParts) == 0 {
@@ -169,7 +173,8 @@ func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 	return &iniConfig{key: key}, nil
 }
 
-func (c *iniConfig) FindKey(path string) (*ini.Key, error) {
+// Ini helpers.
+func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 	pathParts := splitPath(path)
 	if c.key != nil {
 		if len(pathParts) != 0 {

@@ -22,8 +22,9 @@ func (c *jsonConfig) GetType() string {
 	return JSON
 }
 
+// Grabbers.
 func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	if element, err := c.FindElement(path); err == nil {
+	if element, err := c.findElement(path); err == nil {
 		return grabber(element)
 	} else {
 		return err
@@ -33,7 +34,7 @@ func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 func (c *jsonConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	element, err := c.FindElement(path)
+	element, err := c.findElement(path)
 	if err != nil {
 		return err
 	}
@@ -50,6 +51,7 @@ func (c *jsonConfig) GrabValues(path string, delim string,
 	return nil
 }
 
+// Get single value.
 func (c *jsonConfig) GetString(path string) (value string, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
 		value, err = parseJsonString(data)
@@ -78,6 +80,7 @@ func (c *jsonConfig) GetInt(path string) (value int64, err error) {
 	})
 }
 
+// Get array of values.
 func (c *jsonConfig) GetStrings(path string, delim string) (value []string, err error) {
 	return value, c.GrabValues(path, delim,
 		func(cap int) { value = make([]string, 0, cap) },
@@ -126,15 +129,17 @@ func (c *jsonConfig) GetInts(path string, delim string) (value []int64, err erro
 		})
 }
 
+// Get subconfig.
 func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
-	element, err := c.FindElement(path)
+	element, err := c.findElement(path)
 	if err != nil {
 		return nil, err
 	}
 	return &jsonConfig{data: element}, nil
 }
 
-func (c *jsonConfig) FindElement(path string) (interface{}, error) {
+// Json helpers.
+func (c *jsonConfig) findElement(path string) (interface{}, error) {
 	var element interface{}
 	element = c.data
 	for _, pathPart := range splitPath(path) {
@@ -151,7 +156,7 @@ func (c *jsonConfig) FindElement(path string) (interface{}, error) {
 	return element, nil
 }
 
-// Helpers.
+// Json value parsers.
 func parseJsonString(data interface{}) (value string, err error) {
 	if value, converted := data.(string); converted {
 		return value, err
