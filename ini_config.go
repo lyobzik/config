@@ -1,8 +1,6 @@
 package config
 
 import (
-	"errors"
-
 	ini "gopkg.in/ini.v1"
 	"strconv"
 )
@@ -26,17 +24,28 @@ func (c *iniConfig) GetType() string {
 	return INI
 }
 
-func (c *iniConfig) GetValue(path string) (value interface{}, err error) {
-	configPart, err := c.GetConfigPart(path)
+func (c *iniConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
+	value, err := c.GetString(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	iniConfigPart, converted := configPart.(*iniConfig)
-	if converted && iniConfigPart.key != nil {
-		return iniConfigPart.key.Value(), nil
-	}
+	return grabber(value)
+}
 
-	return nil, errors.New("Not implemented")
+func (c *iniConfig) GrabValues(path string, delim string,
+	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
+
+	values, err := c.GetStrings(path, delim)
+	if err != nil {
+		return err
+	}
+	creator(len(values))
+	for _, value := range values {
+		if err = grabber(value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *iniConfig) GetString(path string) (value string, err error) {
@@ -80,19 +89,15 @@ func (c *iniConfig) GetStrings(path string, delim string) (value []string, err e
 }
 
 func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error) {
-	key, err := c.FindKey(path)
-	if err != nil {
-		return value, err
-	}
-	stringValues := key.Strings(delim)
-	value = make([]bool, len(stringValues))
-	for i := range stringValues {
-		value[i], err = strconv.ParseBool(stringValues[i])
-		if err != nil {
-			return value, err
-		}
-	}
-	return value, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]bool, 0, cap) },
+		func(data string) error {
+			var parsed bool
+			if parsed, err = strconv.ParseBool(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err error) {

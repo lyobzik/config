@@ -90,8 +90,28 @@ func (c *xmlConfig) GetType() string {
 	return XML
 }
 
-func (c *xmlConfig) GetValue(path string) (value interface{}, err error) {
-	return c.GetString(path)
+func (c *xmlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
+	if element, err := c.GetString(path); err == nil {
+		return grabber(element)
+	} else {
+		return err
+	}
+}
+
+func (c *xmlConfig) GrabValues(path string, delim string,
+	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
+
+	values, err := c.GetStrings(path, delim)
+	if err != nil {
+		return err
+	}
+	creator(len(values))
+	for _, value := range values {
+		if err = grabber(value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *xmlConfig) GetString(path string) (value string, err error) {
@@ -106,27 +126,24 @@ func (c *xmlConfig) GetString(path string) (value string, err error) {
 }
 
 func (c *xmlConfig) GetBool(path string) (value bool, err error) {
-	stringValue, err := c.GetString(path)
-	if err != nil {
-		return false, err
-	}
-	return parseXmlBool(stringValue)
+	return value, GrabStringValue(c, path, func(data string) error {
+		value, err = parseXmlBool(data)
+		return err
+	})
 }
 
 func (c *xmlConfig) GetFloat(path string) (value float64, err error) {
-	stringValue, err := c.GetString(path)
-	if err != nil {
-		return 0.0, err
-	}
-	return parseXmlFloat(stringValue)
+	return value, GrabStringValue(c, path, func(data string) error {
+		value, err = parseXmlFloat(data)
+		return err
+	})
 }
 
 func (c *xmlConfig) GetInt(path string) (value int64, err error) {
-	stringValue, err := c.GetString(path)
-	if err != nil {
-		return 0, err
-	}
-	return parseXmlInt(stringValue)
+	return value, GrabStringValue(c, path, func(data string) error {
+		value, err = parseXmlInt(data)
+		return err
+	})
 }
 
 func (c *xmlConfig) GetStrings(path string, delim string) (value []string, err error) {
@@ -141,45 +158,39 @@ func (c *xmlConfig) GetStrings(path string, delim string) (value []string, err e
 }
 
 func (c *xmlConfig) GetBools(path string, delim string) (value []bool, err error) {
-	stringValues, err := c.GetStrings(path, delim)
-	if err != nil {
-		return value, err
-	}
-	resultValue := make([]bool, len(stringValues))
-	for i := range stringValues {
-		if resultValue[i], err = parseXmlBool(stringValues[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]bool, 0, cap) },
+		func(data string) error {
+			var parsed bool
+			if parsed, err = parseXmlBool(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *xmlConfig) GetFloats(path string, delim string) (value []float64, err error) {
-	stringValues, err := c.GetStrings(path, delim)
-	if err != nil {
-		return value, err
-	}
-	resultValue := make([]float64, len(stringValues))
-	for i := range stringValues {
-		if resultValue[i], err = parseXmlFloat(stringValues[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]float64, 0, cap) },
+		func(data string) error {
+			var parsed float64
+			if parsed, err = parseXmlFloat(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *xmlConfig) GetInts(path string, delim string) (value []int64, err error) {
-	stringValues, err := c.GetStrings(path, delim)
-	if err != nil {
-		return value, err
-	}
-	resultValue := make([]int64, len(stringValues))
-	for i := range stringValues {
-		if resultValue[i], err = parseXmlInt(stringValues[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]int64, 0, cap) },
+		func(data string) error {
+			var parsed int64
+			if parsed, err = parseXmlInt(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *xmlConfig) GetConfigPart(path string) (Config, error) {

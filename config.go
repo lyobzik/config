@@ -26,13 +26,17 @@ var (
 	ErrorIncorrectValueType = errors.New("Incorrect value type")
 	ErrorUnsupportedFieldType = errors.New("Unsupported field type")
 	ErrorIncorrectValueToLoadConfig = errors.New("Inccorect value to load config")
-
 )
+
+type ValueSliceCreator func(length int)
+type ValueGrabber func(interface{}) error
+type StringValueGrabber func(string) error
 
 type Config interface {
 	GetType() string
 
-	GetValue(path string) (value interface{}, err error)
+	GrabValue(path string, grabber ValueGrabber) (err error)
+	GrabValues(path string, delim string, creator ValueSliceCreator, grabber ValueGrabber) (err error)
 
 	GetString(path string) (value string, err error)
 	GetBool(path string) (value bool, err error)
@@ -76,12 +80,35 @@ func ReadConfigFromReader(configReader io.Reader, configType string) (Config, er
 }
 
 // Functions to read values of some specific types.
-func GetDuration(c Config, path string) (value time.Duration, err error) {
-	stringValue, err := c.GetString(path)
+func GrabStringValue(c Config, path string, grabber StringValueGrabber) (err error) {
+	value, err := c.GetString(path)
 	if err != nil {
-		return value, err
+		return err
 	}
-	return time.ParseDuration(stringValue)
+	return grabber(value)
+}
+
+func GrabStringValues(c Config, path string, delim string,
+	creator ValueSliceCreator, grabber StringValueGrabber) (err error) {
+
+	values, err := c.GetStrings(path, delim)
+	if err != nil {
+		return err
+	}
+	creator(len(values))
+	for _, value := range values {
+		if err = grabber(value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GetDuration(c Config, path string) (value time.Duration, err error) {
+	return value, GrabStringValue(c, path, func(data string) error {
+		value, err = time.ParseDuration(data)
+		return err
+	})
 }
 
 func GetTime(c Config, path string) (value time.Time, err error) {
@@ -89,25 +116,22 @@ func GetTime(c Config, path string) (value time.Time, err error) {
 }
 
 func GetTimeFormat(c Config, path string, format string) (value time.Time, err error) {
-	stringValue, err := c.GetString(path)
-	if err != nil {
-		return value, err
-	}
-	return time.Parse(format, stringValue)
+	return value, GrabStringValue(c, path, func(data string) error {
+		value, err = time.Parse(format, data)
+		return err
+	})
 }
 
 func GetDurations(c Config, path string, delim string) (value []time.Duration, err error) {
-	stringValues, err := c.GetStrings(path, delim)
-	if err != nil {
-		return value, err
-	}
-	resultValue := make([]time.Duration, len(stringValues))
-	for i := range stringValues {
-		if resultValue[i], err = time.ParseDuration(stringValues[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]time.Duration, 0, cap) },
+		func(data string) error {
+			var parsed time.Duration
+			if parsed, err = time.ParseDuration(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func GetTimes(c Config, path string, delim string) (value []time.Time, err error) {
@@ -115,17 +139,15 @@ func GetTimes(c Config, path string, delim string) (value []time.Time, err error
 }
 
 func GetTimesFormat(c Config, path string, format string, delim string) (value []time.Time, err error) {
-	stringValues, err := c.GetStrings(path, delim)
-	if err != nil {
-		return value, err
-	}
-	resultValue := make([]time.Time, len(stringValues))
-	for i := range stringValues {
-		if resultValue[i], err = time.Parse(stringValues[i], format); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]time.Time, 0, cap) },
+		func(data string) error {
+			var parsed time.Time
+			if parsed, err = time.Parse(data, format); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func LoadValue(c Config, path string, value interface{}) (err error) {

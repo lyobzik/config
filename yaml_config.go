@@ -23,112 +23,108 @@ func (c *yamlConfig) GetType() string {
 	return YAML
 }
 
-func (c *yamlConfig) GetValue(path string) (value interface{}, err error) {
-	return c.FindElement(path)
+func (c *yamlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
+	if element, err := c.FindElement(path); err == nil {
+		return grabber(element)
+	} else {
+		return err
+	}
+}
+
+func (c *yamlConfig) GrabValues(path string, delim string,
+	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
+
+	element, err := c.FindElement(path)
+	if err != nil {
+		return err
+	}
+	values, converted := element.([]interface{})
+	if !converted {
+		return ErrorIncorrectValueType
+	}
+	creator(len(values))
+	for _, value := range values {
+		if err = grabber(value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *yamlConfig) GetString(path string) (value string, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseYamlString(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseYamlString(data)
+		return err
+	})
 }
 
 func (c *yamlConfig) GetBool(path string) (value bool, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseYamlBool(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseYamlBool(data)
+		return err
+	})
 }
 
 func (c *yamlConfig) GetFloat(path string) (value float64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseYamlFloat(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseYamlFloat(data)
+		return err
+	})
 }
 
 func (c *yamlConfig) GetInt(path string) (value int64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseYamlInt(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseYamlInt(data)
+		return err
+	})
 }
 
 func (c *yamlConfig) GetStrings(path string, delim string) (value []string, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]string, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseYamlString(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]string, 0, cap) },
+		func(data interface{}) error {
+			var parsed string
+			if parsed, err = parseYamlString(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *yamlConfig) GetBools(path string, delim string) (value []bool, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]bool, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseYamlBool(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]bool, 0, cap) },
+		func(data interface{}) error {
+			var parsed bool
+			if parsed, err = parseYamlBool(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *yamlConfig) GetFloats(path string, delim string) (value []float64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]float64, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseYamlFloat(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]float64, 0, cap) },
+		func(data interface{}) error {
+			var parsed float64
+			if parsed, err = parseYamlFloat(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *yamlConfig) GetInts(path string, delim string) (value []int64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]int64, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseYamlInt(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]int64, 0, cap) },
+		func(data interface{}) error {
+			var parsed int64
+			if parsed, err = parseYamlInt(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *yamlConfig) GetConfigPart(path string) (Config, error) {

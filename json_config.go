@@ -1,9 +1,9 @@
 package config
 
- import (
+import (
 	"encoding/json"
 	"math"
- )
+)
 
 type jsonConfig struct {
 	data interface{}
@@ -22,112 +22,108 @@ func (c *jsonConfig) GetType() string {
 	return JSON
 }
 
-func (c *jsonConfig) GetValue(path string) (value interface{}, err error) {
-	return c.FindElement(path)
+func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
+	if element, err := c.FindElement(path); err == nil {
+		return grabber(element)
+	} else {
+		return err
+	}
+}
+
+func (c *jsonConfig) GrabValues(path string, delim string,
+	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
+
+	element, err := c.FindElement(path)
+	if err != nil {
+		return err
+	}
+	values, converted := element.([]interface{})
+	if !converted {
+		return ErrorIncorrectValueType
+	}
+	creator(len(values))
+	for _, value := range values {
+		if err = grabber(value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *jsonConfig) GetString(path string) (value string, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseJsonString(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseJsonString(data)
+		return err
+	})
 }
 
 func (c *jsonConfig) GetBool(path string) (value bool, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseJsonBool(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseJsonBool(data)
+		return err
+	})
 }
 
 func (c *jsonConfig) GetFloat(path string) (value float64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseJsonFloat(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseJsonFloat(data)
+		return err
+	})
 }
 
 func (c *jsonConfig) GetInt(path string) (value int64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	return parseJsonInt(element)
+	return value, c.GrabValue(path, func(data interface{}) error {
+		value, err = parseJsonInt(data)
+		return err
+	})
 }
 
 func (c *jsonConfig) GetStrings(path string, delim string) (value []string, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]string, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseJsonString(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]string, 0, cap) },
+		func(data interface{}) error {
+			var parsed string
+			if parsed, err = parseJsonString(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *jsonConfig) GetBools(path string, delim string) (value []bool, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]bool, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseJsonBool(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]bool, 0, cap) },
+		func(data interface{}) error {
+			var parsed bool
+			if parsed, err = parseJsonBool(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *jsonConfig) GetFloats(path string, delim string) (value []float64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]float64, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseJsonFloat(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]float64, 0, cap) },
+		func(data interface{}) error {
+			var parsed float64
+			if parsed, err = parseJsonFloat(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *jsonConfig) GetInts(path string, delim string) (value []int64, err error) {
-	element, err := c.FindElement(path)
-	if err != nil {
-		return value, err
-	}
-	arrayValue, converted := element.([]interface{})
-	if !converted {
-		return value, ErrorIncorrectValueType
-	}
-	resultValue := make([]int64, len(arrayValue))
-	for i := range arrayValue {
-		if resultValue[i], err = parseJsonInt(arrayValue[i]); err != nil {
-			return value, err
-		}
-	}
-	return resultValue, nil
+	return value, c.GrabValues(path, delim,
+		func(cap int) { value = make([]int64, 0, cap) },
+		func(data interface{}) error {
+			var parsed int64
+			if parsed, err = parseJsonInt(data); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
