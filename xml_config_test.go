@@ -65,7 +65,7 @@ func TestManyLevelXml(t *testing.T) {
 	}
 }
 
-func TestManyLevelXmlGetValue(t *testing.T) {
+func TestManyLevelXmlLoadValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(manyLevelXmlConfig))
 	if err != nil {
 		t.Errorf("Cannot parse xml-config: %v", err)
@@ -73,7 +73,7 @@ func TestManyLevelXmlGetValue(t *testing.T) {
 	}
 
 	value := configData{}
-	err = LoadValue(config, "/xml/root/child/grandchild/first", &value)
+	err = LoadValueIgnoringErrors(config, "/xml/root/child/grandchild/first", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from config: %v", err)
 		return

@@ -86,10 +86,6 @@ func newXmlConfig(data []byte) (Config, error) {
 	return &xmlConfig{data: xmlRoot}, nil
 }
 
-func (c *xmlConfig) GetType() string {
-	return XML
-}
-
 // Grabbers.
 func (c *xmlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	if element, err := c.GetString(path); err == nil {
@@ -119,7 +115,7 @@ func (c *xmlConfig) GrabValues(path string, delim string,
 func (c *xmlConfig) GetString(path string) (value string, err error) {
 	element, attribute, err := c.findElement(path)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	if element != nil {
 		return element.Value, nil

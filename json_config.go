@@ -18,10 +18,6 @@ func newJsonConfig(data []byte) (Config, error) {
 	return &config, nil
 }
 
-func (c *jsonConfig) GetType() string {
-	return JSON
-}
-
 // Grabbers.
 func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	if element, err := c.findElement(path); err == nil {

@@ -49,7 +49,7 @@ func TestTwoLevelIni(t *testing.T) {
 	}
 }
 
-func TestTwoLevelIniGetValue(t *testing.T) {
+func TestTwoLevelIniLoadValue(t *testing.T) {
 	config, err := newIniConfig([]byte(twoLevelIniConfig))
 	if err != nil {
 		t.Errorf("Cannot parse ini-config: %v", err)
@@ -57,7 +57,7 @@ func TestTwoLevelIniGetValue(t *testing.T) {
 	}
 
 	value := configData{}
-	err = LoadValue(config, "/first", &value)
+	err = LoadValueIgnoringErrors(config, "/first", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from config: %v", err)
 		return
@@ -81,7 +81,7 @@ func TestTwoLevelIniGetConfigPart(t *testing.T) {
 		return
 	}
 	expectedValue := configData{}
-	err = LoadValue(expectedConfig, "/", &expectedValue)
+	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
 	if err != nil {
 		t.Errorf("Cannot load value from expected ini-config: %v", err)
 		return
@@ -98,7 +98,7 @@ func TestTwoLevelIniGetConfigPart(t *testing.T) {
 		return
 	}
 	value := configData{}
-	err = LoadValue(configPart, "/", &value)
+	err = LoadValueIgnoringErrors(configPart, "/", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from ini-config: %v", err)
 		return

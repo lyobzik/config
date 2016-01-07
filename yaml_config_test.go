@@ -62,7 +62,7 @@ func TestManyLevelYaml(t *testing.T) {
 	}
 }
 
-func TestManyLevelYamlGetValue(t *testing.T) {
+func TestManyLevelYamlLoadValue(t *testing.T) {
 	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
 	if err != nil {
 		t.Errorf("Cannot parse yaml-config: %v", err)
@@ -70,7 +70,7 @@ func TestManyLevelYamlGetValue(t *testing.T) {
 	}
 
 	value := configData{}
-	err = LoadValue(config, "/root/child/grandchild/first", &value)
+	err = LoadValueIgnoringErrors(config, "/root/child/grandchild/first", &value)
 	if err != nil {
 		t.Errorf("Cannot load value from config: %v", err)
 		return

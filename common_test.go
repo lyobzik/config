@@ -3,6 +3,7 @@ package config
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 // Helpers to get and check values.
@@ -95,14 +96,15 @@ var (
 
 // Settings structure used in tests.
 type configData struct {
-	StringElement string `ini:"stringElement" xml:"stringElement" json:"stringElement" yaml:"stringElement"`
-	BoolElement bool `ini:"boolElement" xml:"boolElement" json:"boolElement" yaml:"boolElement"`
-	FloatElement float64 `ini:"floatElement" xml:"floatElement" json:"floatElement" yaml:"floatElement"`
-	IntElement int64 `ini:"intElement" xml:"intElement" json:"intElement" yaml:"intElement"`
+	StringElement string `config:"stringElement"`
+	BoolElement bool `config:"boolElement"`
+	FloatElement float64 `config:"floatElement"`
+	IntElement int64 `config:"intElement"`
 
-	StringElements []string `ini:"stringElements" xml:"stringElements" json:"stringElements" yaml:"stringElements"`
-	BoolElements []bool `ini:"boolElements" xml:"boolElements" json:"boolElements" yaml:"boolElements"`
-	FloatElements []float64 `ini:"floatElements" xml:"floatElements" json:"floatElements" yaml:"floatElements"`
-	IntElements []int64 `ini:"intElements" xml:"intElements" json:"intElements" yaml:"intElements"`
+	StringElements []string `config:"stringElements"`
+	BoolElements []bool `config:"boolElements"`
+	FloatElements []float64 `config:"floatElements"`
+	IntElements []int64 `config:"intElements"`
 
+	TimeElement time.Time
 }

@@ -24,8 +24,8 @@ var (
 	ErrorIncorrectPath = errors.New("Incorrect path")
 	ErrorUnknownConfigType = errors.New("Unknown config type")
 	ErrorIncorrectValueType = errors.New("Incorrect value type")
-	ErrorUnsupportedFieldType = errors.New("Unsupported field type")
-	ErrorIncorrectValueToLoadConfig = errors.New("Inccorect value to load config")
+	ErrorUnsupportedFieldTypeToLoadValue = errors.New("Unsupported field type")
+	ErrorIncorrectValueToLoadFromConfig = errors.New("Inccorect value to load config")
 )
 
 type ValueSliceCreator func(length int)
@@ -33,8 +33,6 @@ type ValueGrabber func(interface{}) error
 type StringValueGrabber func(string) error
 
 type Config interface {
-	GetType() string
-
 	GrabValue(path string, grabber ValueGrabber) (err error)
 	GrabValues(path string, delim string, creator ValueSliceCreator, grabber ValueGrabber) (err error)
 
@@ -143,17 +141,66 @@ func GetTimesFormat(c Config, path string, format string, delim string) (value [
 		func(cap int) { value = make([]time.Time, 0, cap) },
 		func(data string) error {
 			var parsed time.Time
-			if parsed, err = time.Parse(data, format); err == nil {
+			if parsed, err = time.Parse(format, data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
 		})
 }
 
+// Function to load value of arbitrary type.
+type Loadable interface {
+	LoadValueFromConfig(data string) (err error)
+}
+
+type StringValueLoader func(string) (reflect.Value, error)
+
+type LoadSettings struct {
+	Delim        string
+	IgnoreErrors bool
+	Loaders		 map[string]StringValueLoader
+}
+
+var (
+	DefaultLoaders = map[string]StringValueLoader{
+		"time.Time": func(data string) (reflect.Value, error) {
+			value, err := time.Parse(time.RFC3339, data)
+			if err == nil {
+				return reflect.ValueOf(value), nil
+			}
+			return reflect.ValueOf(nil), err
+		},
+		"time.Duration": func(data string) (reflect.Value, error) {
+			value, err := time.ParseDuration(data)
+			if err == nil {
+				return reflect.ValueOf(value), nil
+			}
+			return reflect.ValueOf(nil), err
+		}}
+)
+
 func LoadValue(c Config, path string, value interface{}) (err error) {
+	return ParametrizedLoadValue(c, false, path, value)
+}
+
+func LoadValueIgnoringErrors(c Config, path string, value interface{}) (err error) {
+	return ParametrizedLoadValue(c, true, path, value)
+}
+
+func ParametrizedLoadValue(c Config, ignoreErrros bool, path string,
+	value interface{}) (err error) {
+
+	settings := LoadSettings{Delim: DEFAULT_ARRAY_DELIMITER,
+		IgnoreErrors: ignoreErrros,
+		Loaders: DefaultLoaders}
+	return TunedLoadValue(c, settings, path, value)
+}
+
+func TunedLoadValue(c Config, settings LoadSettings, path string, value interface{}) (err error) {
 	val := reflect.ValueOf(value)
 	if val.Kind() != reflect.Ptr || !val.Elem().CanAddr() || !val.Elem().CanSet() {
-		return ErrorIncorrectValueToLoadConfig
+		return ErrorIncorrectValueToLoadFromConfig
 	}
-	return loadValue(c, path, val.Elem())
+	outputValue := val.Elem()
+	return loadValue(c, settings, path, &outputValue)
 }

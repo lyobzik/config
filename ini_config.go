@@ -20,10 +20,6 @@ func newIniConfig(data []byte) (Config, error) {
 	return &iniConfig{file: file}, nil
 }
 
-func (c *iniConfig) GetType() string {
-	return INI
-}
-
 // Grabbers.
 func (c *iniConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	value, err := c.GetString(path)
@@ -140,7 +136,7 @@ func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 		if len(pathParts) == 0 {
 			return &iniConfig{section: c.section}, nil
 		}
-		key := c.section.Key(pathParts[0])
+		key, _ := c.section.GetKey(pathParts[0])
 		if key == nil {
 			return nil, ErrorNotFound
 		}
@@ -156,9 +152,9 @@ func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 	}
 	var section *ini.Section
 	if len(pathParts) == 1 && len(c.file.Sections()) == 1 {
-		section = c.file.Section("")
+		section, _ = c.file.GetSection("")
 	} else {
-		section = c.file.Section(pathParts[0])
+		section, _ = c.file.GetSection(pathParts[0])
 	}
 	if section == nil {
 		return nil, ErrorNotFound
@@ -166,7 +162,7 @@ func (c *iniConfig) GetConfigPart(path string) (Config, error) {
 	if len(pathParts) == 1 {
 		return &iniConfig{section: section}, nil
 	}
-	key := section.Key(pathParts[len(pathParts) - 1])
+	key, _ := section.GetKey(pathParts[len(pathParts) - 1])
 	if key == nil {
 		return nil, ErrorNotFound
 	}
@@ -187,7 +183,7 @@ func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 		if len(pathParts) != 1 {
 			return nil, ErrorIncorrectPath
 		}
-		key := c.section.Key(pathParts[0])
+		key, _ := c.section.GetKey(pathParts[0])
 		if key == nil {
 			return nil, ErrorNotFound
 		}
@@ -200,14 +196,14 @@ func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 		}
 		var section *ini.Section
 		if len(pathParts) == 1 && len(c.file.Sections()) == 1 {
-			section = c.file.Section("")
+			section, _ = c.file.GetSection("")
 		} else {
-			section = c.file.Section(pathParts[0])
+			section, _ = c.file.GetSection(pathParts[0])
 		}
 		if section == nil {
 			return nil, ErrorNotFound
 		}
-		key := section.Key(pathParts[len(pathParts) - 1])
+		key, _ := section.GetKey(pathParts[len(pathParts) - 1])
 		if key == nil {
 			return nil, ErrorNotFound
 		}

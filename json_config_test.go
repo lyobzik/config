@@ -12,7 +12,8 @@ var (
 		"stringElements": ["value1", "value2", "value3"],
 		"boolElements": [true, false, true],
 		"floatElements": [1.23, 4.56, 7.89],
-		"intElements": [123, 456, 789]}`
+		"intElements": [123, 456, 789],
+		"TimeElement": "2006-01-02T15:04:05+07:00"}`
 	twoLevelJsonConfig = fmt.Sprintf(`{"first": %[1]s, "second": %[1]s}`, oneLevelJsonConfig)
 	manyLevelJsonConfig = fmt.Sprintf(`{"root": {"child1": %[1]s, "child": {"grandchild": %[1]s}},
 		"root1": {"child": %[1]s}}`, twoLevelJsonConfig)

@@ -19,10 +19,6 @@ func newYamlConfig(data []byte) (Config, error) {
 	return &config, nil
 }
 
-func (c *yamlConfig) GetType() string {
-	return YAML
-}
-
 // Grabbers.
 func (c *yamlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 	if element, err := c.findElement(path); err == nil {
