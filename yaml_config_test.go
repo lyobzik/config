@@ -1,10 +1,11 @@
 package config
 
 import (
-	"reflect"
 	"testing"
 	"strings"
 	"fmt"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -22,24 +23,18 @@ var (
 
 func equalYamlTest(t *testing.T, data string, path string, functors Functors) {
 	config, err := newYamlConfig([]byte(data))
-	if err != nil {
-		t.Errorf("Cannot parse yaml-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse yaml-config")
+
 	value, err := functors.Getter(config, path)
-	if err != nil {
-		t.Errorf("Cannot get value of '%s': %v", path, err)
-		return
-	}
+	require.NoError(t, err, "Cannot get value of '%s'", path)
+
 	functors.Checker(t, value)
 }
 
 // Tests.
 func TestCreateEmptyYaml(t *testing.T) {
 	_, err := newJsonConfig([]byte("{}"))
-	if err != nil {
-		t.Errorf("Cannot parse empty yaml-config: %v", err)
-	}
+	require.NoError(t, err, "Cannot parse empty yaml-config")
 }
 
 func TestOneLevelYaml(t *testing.T) {
@@ -64,17 +59,11 @@ func TestManyLevelYaml(t *testing.T) {
 
 func TestManyLevelYamlLoadValue(t *testing.T) {
 	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse yaml-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse yaml-config")
 
 	value := configData{}
 	err = LoadValueIgnoringErrors(config, "/root/child/grandchild/first", &value)
-	if err != nil {
-		t.Errorf("Cannot load value from config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot load value from config")
 
 	checkStringValue(t, value.StringElement)
 	checkBoolValue(t, value.BoolElement)
@@ -89,23 +78,13 @@ func TestManyLevelYamlLoadValue(t *testing.T) {
 
 func TestManyLevelYamlGetConfigPart(t *testing.T) {
 	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse root yaml-config: %v", err)
-		return
-	}
-	expectedConfig, err := newYamlConfig([]byte(oneLevelYamlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse expected yaml-config: %v", err)
-		return
-	}
-	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
-	if err != nil {
-		t.Errorf("Cannot get config part: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse root yaml-config")
 
-	if !reflect.DeepEqual(configPart, expectedConfig) {
-		t.Errorf("Not equal configs: expected - %v, actual - %v", expectedConfig, configPart)
-		return
-	}
+	expectedConfig, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse expected yaml-config")
+
+	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configPart, expectedConfig, "Not equal configs")
 }

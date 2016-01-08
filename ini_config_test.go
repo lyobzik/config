@@ -2,8 +2,9 @@ package config
 
 import (
 	"testing"
-	"reflect"
 	"fmt"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -16,24 +17,18 @@ var (
 
 func equalIniTest(t *testing.T, data string, path string, functors Functors) {
 	config, err := newIniConfig([]byte(data))
-	if err != nil {
-		t.Errorf("Cannot parse ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot parse ini-config")
+
 	value, err := functors.Getter(config, path)
-	if err != nil {
-		t.Errorf("Cannot get value of '%s': %v", path, err)
-		return
-	}
+	require.Nil(t, err, "Cannot get value of '%s'", path)
+
 	functors.Checker(t, value)
 }
 
 // Tests.
 func TestCreateEmptyIni(t *testing.T) {
 	_, err := newIniConfig([]byte(""))
-	if err != nil {
-		t.Errorf("Cannot parse empty ini-config: %v", err)
-	}
+	require.Nil(t, err, "Cannot parse empty ini-config")
 }
 
 func TestOneLevelIni(t *testing.T) {
@@ -51,17 +46,11 @@ func TestTwoLevelIni(t *testing.T) {
 
 func TestTwoLevelIniLoadValue(t *testing.T) {
 	config, err := newIniConfig([]byte(twoLevelIniConfig))
-	if err != nil {
-		t.Errorf("Cannot parse ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot parse ini-config")
 
 	value := configData{}
 	err = LoadValueIgnoringErrors(config, "/first", &value)
-	if err != nil {
-		t.Errorf("Cannot load value from config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot load value from config")
 
 	checkStringValue(t, value.StringElement)
 	checkBoolValue(t, value.BoolElement)
@@ -76,36 +65,21 @@ func TestTwoLevelIniLoadValue(t *testing.T) {
 
 func TestTwoLevelIniGetConfigPart(t *testing.T) {
 	expectedConfig, err := newIniConfig([]byte(oneLevelIniConfig))
-	if err != nil {
-		t.Errorf("Cannot parse expected ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot parse expected ini-config")
+
 	expectedValue := configData{}
 	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
-	if err != nil {
-		t.Errorf("Cannot load value from expected ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot load value from expected ini-config")
 
 	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
-	if err != nil {
-		t.Errorf("Cannot parse root ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot parse root ini-config")
+
 	configPart, err := rootConfig.GetConfigPart("/first")
-	if err != nil {
-		t.Errorf("Cannot get config part: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot get config part")
+
 	value := configData{}
 	err = LoadValueIgnoringErrors(configPart, "/", &value)
-	if err != nil {
-		t.Errorf("Cannot load value from ini-config: %v", err)
-		return
-	}
+	require.Nil(t, err, "Cannot load value from ini-config")
 
-	if !reflect.DeepEqual(value, expectedValue) {
-		t.Errorf("Not equal configs: expected - %v, actual - %v", expectedValue, value)
-		return
-	}
+	require.Equal(t, value, expectedValue, "Not equal configs")
 }

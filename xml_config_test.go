@@ -2,8 +2,9 @@ package config
 
 import (
 	"testing"
-	"reflect"
 	"fmt"
+
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -25,24 +26,18 @@ var (
 
 func equalXmlTest(t *testing.T, data string, path string, functors Functors) {
 	config, err := newXmlConfig([]byte(data))
-	if err != nil {
-		t.Errorf("Cannot parse xml-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse xml-config")
+
 	value, err := functors.Getter(config, path)
-	if err != nil {
-		t.Errorf("Cannot get value of '%s': %v", path, err)
-		return
-	}
+	require.NoError(t, err, "Cannot get value of '%s'", path)
+
 	functors.Checker(t, value)
 }
 
 // Tests.
 func TestCreateEmptyXml(t *testing.T) {
 	_, err := newXmlConfig([]byte("<root/>"))
-	if err != nil {
-		t.Errorf("Cannot parse empty xml-config: %v", err)
-	}
+	require.NoError(t, err, "Cannot parse empty xml-config")
 }
 
 func TestOneLevelXml(t *testing.T) {
@@ -67,17 +62,11 @@ func TestManyLevelXml(t *testing.T) {
 
 func TestManyLevelXmlLoadValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(manyLevelXmlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse xml-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse xml-config")
 
 	value := configData{}
 	err = LoadValueIgnoringErrors(config, "/xml/root/child/grandchild/first", &value)
-	if err != nil {
-		t.Errorf("Cannot load value from config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot load value from config")
 
 	checkStringValue(t, value.StringElement)
 	checkBoolValue(t, value.BoolElement)
@@ -92,29 +81,16 @@ func TestManyLevelXmlLoadValue(t *testing.T) {
 
 func TestManyLevelXmlGetConfigPart(t *testing.T) {
 	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse xml-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse xml-config")
+
 	configPart, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
-	if err != nil {
-		t.Errorf("Cannot get config part: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot get config part")
 
 	expectedConfig, err := newXmlConfig([]byte(oneLevelXmlConfig))
-	if err != nil {
-		t.Errorf("Cannot parse expected json-config: %v", err)
-		return
-	}
-	expectedConfigPart, err := expectedConfig.GetConfigPart("/xml")
-	if err != nil {
-		t.Errorf("Cannot get config part: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse expected json-config")
 
-	if !reflect.DeepEqual(configPart, expectedConfigPart) {
-		t.Errorf("Not equal configs: expected - %v, actual - %v", expectedConfigPart, configPart)
-		return
-	}
+	expectedConfigPart, err := expectedConfig.GetConfigPart("/xml")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configPart, expectedConfigPart, "Not equal configs")
 }

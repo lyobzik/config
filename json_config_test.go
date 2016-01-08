@@ -2,8 +2,9 @@ package config
 
 import (
 	"testing"
-	"reflect"
 	"fmt"
+
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -21,24 +22,18 @@ var (
 
 func equalJsonTest(t *testing.T, data string, path string, functors Functors) {
 	config, err := newJsonConfig([]byte(data))
-	if err != nil {
-		t.Errorf("Cannot parse json-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse json-config")
+
 	value, err := functors.Getter(config, path)
-	if err != nil {
-		t.Errorf("Cannot get value of '%s': %v", path, err)
-		return
-	}
+	require.NoError(t, err, "Cannot get value of '%s'", path)
+
 	functors.Checker(t, value)
 }
 
 // Tests.
 func TestCreateEmptyJson(t *testing.T) {
 	_, err := newJsonConfig([]byte("{}"))
-	if err != nil {
-		t.Errorf("Cannot parse empty json-config: %v", err)
-	}
+	require.NoError(t, err, "Cannot parse empty json-config")
 }
 
 func TestOneLevelJson(t *testing.T) {
@@ -63,17 +58,11 @@ func TestManyLevelJson(t *testing.T) {
 
 func TestManyLevelJsonLoadValue(t *testing.T) {
 	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
-	if err != nil {
-		t.Errorf("Cannot parse json-config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse json-config")
 
 	value := configData{}
 	err = LoadValue(config, "/root/child/grandchild/first", &value)
-	if err != nil {
-		t.Errorf("Cannot load value from config: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot load value from config")
 
 	checkStringValue(t, value.StringElement)
 	checkBoolValue(t, value.BoolElement)
@@ -88,23 +77,13 @@ func TestManyLevelJsonLoadValue(t *testing.T) {
 
 func TestManyLevelJsonGetConfigPart(t *testing.T) {
 	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
-	if err != nil {
-		t.Errorf("Cannot parse root json-config: %v", err)
-		return
-	}
-	expectedConfig, err := newJsonConfig([]byte(oneLevelJsonConfig))
-	if err != nil {
-		t.Errorf("Cannot parse expected json-config: %v", err)
-		return
-	}
-	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
-	if err != nil {
-		t.Errorf("Cannot get config part: %v", err)
-		return
-	}
+	require.NoError(t, err, "Cannot parse root json-config")
 
-	if !reflect.DeepEqual(configPart, expectedConfig) {
-		t.Errorf("Not equal configs: expected - %v, actual - %v", expectedConfig, configPart)
-		return
-	}
+	expectedConfig, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse expected json-config")
+
+	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configPart, expectedConfig, "Not equal configs")
 }
