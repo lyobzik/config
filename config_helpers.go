@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"reflect"
 	"strings"
 )
@@ -53,178 +52,149 @@ func joinPath(pathParts ...string) string {
 }
 
 // Load value implementations.
-func loadValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
+func loadValue(c Config, settings LoadSettings, path string, value reflect.Value) (err error) {
 	switch value.Kind() {
 	case reflect.Bool:
-		err = loadBoolValue(c, settings, path, value)
+		fallthrough
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		err = loadIntValue(c, settings, path, value)
+		fallthrough
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		err = loadUintValue(c, settings, path, value)
+		fallthrough
 	case reflect.Float32, reflect.Float64:
-		err = loadFloatValue(c, settings, path, value)
+		fallthrough
+	case reflect.String:
+		loader := getSingleValueLoader(c, path, value.Kind())
+		var loadedValue reflect.Value
+		if loadedValue, err = loader(); err == nil{
+			value.Set(loadedValue)
+		}
 	case reflect.Slice:
 		err = loadSliceValue(c, settings, path, value)
-	case reflect.String:
-		err = loadStringValue(c, settings, path, value)
 	case reflect.Struct:
 		err = loadStructValue(c, settings, path, value)
 	default:
-		return ErrorUnsupportedFieldTypeToLoadValue
+		err = ErrorUnsupportedFieldTypeToLoadValue
 	}
-	return err
+	return fixupLoadingError(err, settings)
 }
 
-func loadBoolValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var result bool
-	if result, err = c.GetBool(path); err == nil {
-		value.SetBool(result)
-	}
-	return err
-}
+type valueLoader func() (reflect.Value, error)
 
-func loadIntValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var result int64
-	if result, err = c.GetInt(path); err == nil {
-		value.SetInt(result)
-	}
-	return err
-}
-
-func loadUintValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var result int64
-	if result, err = c.GetInt(path); err == nil {
-		value.SetUint(uint64(result))
-	}
-	return err
-}
-
-func loadFloatValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var result float64
-	if result, err = c.GetFloat(path); err == nil {
-		value.SetFloat(result)
-	}
-	return err
-}
-
-func loadStringValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var result string
-	if result, err = c.GetString(path); err == nil {
-		value.SetString(result)
-	}
-	return err
-}
-
-func loadBoolValues(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var results []bool
-	if results, err = c.GetBools(path, " "); err == nil {
-		for _, result := range results {
-			*value = reflect.Append(*value, reflect.ValueOf(result))
-		}
-	}
-	return err
-}
-
-func loadIntValues(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var results []int64
-	if results, err = c.GetInts(path, " "); err == nil {
-		for _, result := range results {
-			*value = reflect.Append(*value, reflect.ValueOf(result))
-		}
-	}
-	return err
-}
-
-func loadUintValues(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var results []int64
-	if results, err = c.GetInts(path, " "); err == nil {
-		for _, result := range results {
-			*value = reflect.Append(*value, reflect.ValueOf(result))
-		}
-	}
-	return err
-}
-
-func loadFloatValues(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var results []float64
-	if results, err = c.GetFloats(path, " "); err == nil {
-		for _, result := range results {
-			*value = reflect.Append(*value, reflect.ValueOf(result))
-		}
-	}
-	return err
-}
-
-func loadStringValues(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	var results []string
-	if results, err = c.GetStrings(path, " "); err == nil {
-		for _, result := range results {
-			*value = reflect.Append(*value, reflect.ValueOf(result))
-		}
-	}
-	return err
-}
-
-func loadSliceValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
-	arrayElementType := value.Type().Elem()
-	results := reflect.MakeSlice(value.Type(), 0, 1)
-	switch arrayElementType.Kind() {
+func getSingleValueLoader(c Config, path string, kind reflect.Kind) valueLoader {
+	switch kind {
 	case reflect.Bool:
-		err = loadBoolValues(c, settings, path, &results)
+		return func() (reflect.Value, error) {
+			value, err := c.GetBool(path)
+			return reflect.ValueOf(value), err
+		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		err = loadIntValues(c, settings, path, &results)
+		return func() (reflect.Value, error) {
+			value, err := c.GetInt(path)
+			return reflect.ValueOf(value), err
+		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		err = loadUintValues(c, settings, path, &results)
+		return func() (reflect.Value, error) {
+			value, err := c.GetInt(path)
+			return reflect.ValueOf(uint64(value)), err
+		}
 	case reflect.Float32, reflect.Float64:
-		err = loadFloatValues(c, settings, path, &results)
+		return func() (reflect.Value, error) {
+			value, err := c.GetFloat(path)
+			return reflect.ValueOf(value), err
+		}
 	case reflect.String:
-		err = loadStringValues(c, settings, path, &results)
-	default:
-		return ErrorUnsupportedFieldTypeToLoadValue
+		return func() (reflect.Value, error) {
+			value, err := c.GetString(path)
+			return reflect.ValueOf(value), err
+		}
 	}
-	if err == nil {
-		value.Set(results)
-	}
-	return err
+	return nil
 }
 
-func loadStructValue(c Config, settings LoadSettings, path string, value *reflect.Value) (err error) {
+func getArrayValuesLoader(c Config, settings LoadSettings, path string, kind reflect.Kind) valueLoader {
+	switch kind {
+	case reflect.Bool:
+		return func() (reflect.Value, error) {
+			value, err := c.GetBools(path, settings.Delim)
+			return reflect.ValueOf(value), err
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return func() (reflect.Value, error) {
+			value, err := c.GetInts(path, settings.Delim)
+			return reflect.ValueOf(value), err
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return func() (reflect.Value, error) {
+			value, err := c.GetInts(path, settings.Delim)
+			convertedValue := make([]uint64, len(value))
+			for i := range value {
+				convertedValue[i] = uint64(value[i])
+			}
+			return reflect.ValueOf(convertedValue), err
+		}
+	case reflect.Float32, reflect.Float64:
+		return func() (reflect.Value, error) {
+			value, err := c.GetFloats(path, settings.Delim)
+			return reflect.ValueOf(value), err
+		}
+	case reflect.String:
+		return func() (reflect.Value, error) {
+			value, err := c.GetStrings(path, settings.Delim)
+			return reflect.ValueOf(value), err
+		}
+	}
+	return nil
+}
+
+func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.Value) (err error) {
+	valueKind := value.Type().Elem().Kind()
+	switch valueKind {
+	case reflect.Bool:
+		fallthrough
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		fallthrough
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		fallthrough
+	case reflect.Float32, reflect.Float64:
+		fallthrough
+	case reflect.String:
+		loader := getArrayValuesLoader(c, settings, path, valueKind)
+		var loadedValue reflect.Value
+		if loadedValue, err = loader(); err == nil{
+			value.Set(loadedValue)
+		}
+	default:
+		err = ErrorUnsupportedFieldTypeToLoadValue
+	}
+	return fixupLoadingError(err, settings)
+}
+
+func loadStructValue(c Config, settings LoadSettings, path string, value reflect.Value) (err error) {
+	// Load struct using custom loader.
 	if loader, exist := settings.Loaders[value.Type().String()]; exist {
-		data, err := c.GetString(path)
-		if err == nil {
-			var loadedValue reflect.Value
-			if loadedValue, err = loader(data); err == nil {
+		if data, err := c.GetString(path); err == nil {
+			loadedValue, err := loader(data)
+			if err == nil {
 				value.Set(loadedValue)
 			}
-			return err
+			return fixupLoadingError(err, settings)
 		}
 	}
-	if isLoadable(*value) {
-		loadValue := (*value).MethodByName("LoadValueFromConfig")
-		if loadValue.IsValid() {
-			if data, getError := c.GetString(path); getError == nil {
-				loadResult := loadValue.Call([]reflect.Value{reflect.ValueOf(data)})
-				if len(loadResult) == 1 {
-					var converted bool
-					if err, converted = loadResult[0].Interface().(error); converted {
-						return err
-					}
-				}
-				return errors.New("Cannot load value")
+	// Load struct using Loadable interface.
+	if isLoadable(value) {
+		if loadableValue, converted := value.Interface().(Loadable); converted {
+			if data, err := c.GetString(path); err == nil {
+				err = loadableValue.LoadValueFromConfig(data)
+				return fixupLoadingError(err, settings)
 			}
 		}
 	}
+	// Load struct by field.
 	for i := 0; i < value.NumField() && err == nil; i += 1 {
 		fieldValue := value.Field(i)
-		fieldType := value.Type().Field(i)
-		fieldName := fieldType.Tag.Get(TAG_KEY)
-		if len(fieldName) == 0 {
-			fieldName = fieldType.Name
-		}
-		err = loadValue(c, settings, joinPath(path, fieldName), &fieldValue)
-		if err != nil && settings.IgnoreErrors {
-			err = nil
-		}
+		fieldPath := joinPath(path, getFieldName(value, i))
+		err = loadValue(c, settings, fieldPath, fieldValue)
+		err = fixupLoadingError(err, settings)
 	}
 	return err
 }
@@ -232,4 +202,20 @@ func loadStructValue(c Config, settings LoadSettings, path string, value *reflec
 func isLoadable(value reflect.Value) bool {
 	loadableType := reflect.TypeOf((*Loadable)(nil)).Elem()
 	return value.Type().Implements(loadableType)
+}
+
+func getFieldName(value reflect.Value, i int) string {
+	fieldType := value.Type().Field(i)
+	fieldName := fieldType.Tag.Get(TAG_KEY)
+	if len(fieldName) != 0 {
+		return fieldName
+	}
+	return fieldType.Name
+}
+
+func fixupLoadingError(err error, settings LoadSettings) error {
+	if settings.IgnoreErrors {
+		return nil
+	}
+	return err
 }

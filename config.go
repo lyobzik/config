@@ -25,7 +25,7 @@ var (
 	ErrorUnknownConfigType = errors.New("Unknown config type")
 	ErrorIncorrectValueType = errors.New("Incorrect value type")
 	ErrorUnsupportedFieldTypeToLoadValue = errors.New("Unsupported field type")
-	ErrorIncorrectValueToLoadFromConfig = errors.New("Inccorect value to load config")
+	ErrorIncorrectValueToLoadFromConfig = errors.New("Inccorect value to load from config")
 )
 
 type ValueSliceCreator func(length int)
@@ -201,6 +201,5 @@ func TunedLoadValue(c Config, settings LoadSettings, path string, value interfac
 	if val.Kind() != reflect.Ptr || !val.Elem().CanAddr() || !val.Elem().CanSet() {
 		return ErrorIncorrectValueToLoadFromConfig
 	}
-	outputValue := val.Elem()
-	return loadValue(c, settings, path, &outputValue)
+	return loadValue(c, settings, path, val.Elem())
 }
