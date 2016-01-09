@@ -40,7 +40,7 @@ func (e *xmlElement) SetValue(value string) {
 	}
 }
 
-func parseXml(data[] byte) (*xmlElement, error) {
+func parseXml(data []byte) (*xmlElement, error) {
 	reader := bytes.NewReader(data)
 	decoder := xml.NewDecoder(reader)
 
