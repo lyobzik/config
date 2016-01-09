@@ -53,41 +53,40 @@ func joinPath(pathParts ...string) string {
 
 // Load value implementations.
 func loadValue(c Config, settings LoadSettings, path string, value reflect.Value) (err error) {
-	if existCustomLoader(settings, value) {
-		return loadStructValueUsingCustomLoader(c, settings, path, value)
-	}
-	if isLoadable(value) {
-		return loadStructValueUsingLoadable(c, settings, path, value)
-	}
-	switch value.Kind() {
-	case reflect.Bool:
-		fallthrough
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		fallthrough
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		fallthrough
-	case reflect.Float32, reflect.Float64:
-		fallthrough
-	case reflect.String:
-		loader := getSingleValueLoader(c, path, value.Kind())
+	if loader := getSingleValueLoader(c, settings, path, value); loader != nil {
 		var loadedValue reflect.Value
-		if loadedValue, err = loader(); err == nil{
+		if loadedValue, err = loader(); err == nil {
 			value.Set(loadedValue)
 		}
-	case reflect.Slice:
-		err = loadSliceValue(c, settings, path, value)
-	case reflect.Struct:
-		err = loadStructValueByFields(c, settings, path, value)
-	default:
-		err = ErrorUnsupportedFieldTypeToLoadValue
+	} else {
+		err = ErrorUnsupportedTypeToLoadValue
 	}
-	return fixupLoadingError(err, settings)
+	if settings.IgnoreErrors {
+		return nil
+	}
+	return err
 }
 
 type valueLoader func() (reflect.Value, error)
 
-func getSingleValueLoader(c Config, path string, kind reflect.Kind) valueLoader {
-	switch kind {
+func getSingleValueLoader(c Config, settings LoadSettings, path string, value reflect.Value) valueLoader {
+	if existCustomLoader(settings, value) {
+		if data, err := c.GetString(path); err == nil {
+			return func() (reflect.Value, error) {
+				err = loadStructValueUsingCustomLoaderByValue(data, settings, value)
+				return value, err
+			}
+		}
+	}
+	if isLoadable(value) {
+		if data, err := c.GetString(path); err == nil {
+			return func() (reflect.Value, error) {
+				err = loadStructValueUsingLoadableByValue(data, settings, value)
+				return value, err
+			}
+		}
+	}
+	switch value.Kind() {
 	case reflect.Bool:
 		return func() (reflect.Value, error) {
 			value, err := c.GetBool(path)
@@ -113,12 +112,37 @@ func getSingleValueLoader(c Config, path string, kind reflect.Kind) valueLoader 
 			value, err := c.GetString(path)
 			return reflect.ValueOf(value), err
 		}
+	case reflect.Slice:
+		return getArrayValuesLoader(c, settings, path, value)
+	case reflect.Struct:
+		return func() (reflect.Value, error) {
+			err := loadStructValueByFields(c, settings, path, value)
+			return value, err
+		}
 	}
 	return nil
 }
 
-func getArrayValuesLoader(c Config, settings LoadSettings, path string, kind reflect.Kind) valueLoader {
-	switch kind {
+func getArrayValuesLoader(c Config, settings LoadSettings, path string, value reflect.Value) valueLoader {
+	elementType := value.Type().Elem()
+	elementTypeValue := reflect.New(elementType).Elem()
+	if existCustomLoader(settings, elementTypeValue) {
+		if values, err := c.GetStrings(path, settings.Delim); err == nil {
+			loader, _ := settings.Loaders[elementType.String()]
+			return createSliceLoader(values, settings, value, loader)
+		}
+	}
+	if isLoadable(elementTypeValue) {
+		if values, err := c.GetStrings(path, settings.Delim); err == nil {
+			return createSliceLoader(values, settings, value, func(data string) (reflect.Value, error) {
+				value := reflect.New(elementType)
+				loadableValue, _ := value.Interface().(Loadable)
+				err := loadableValue.LoadValueFromConfig(data)
+				return value, err
+			})
+		}
+	}
+	switch elementType.Kind() {
 	case reflect.Bool:
 		return func() (reflect.Value, error) {
 			value, err := c.GetBools(path, settings.Delim)
@@ -152,107 +176,6 @@ func getArrayValuesLoader(c Config, settings LoadSettings, path string, kind ref
 	return nil
 }
 
-func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.Value) (err error) {
-	elementType := value.Type().Elem()
-	if existCustomLoader(settings, reflect.New(elementType).Elem()) {
-		values, err := c.GetStrings(path, settings.Delim)
-		if err == nil {
-			return err
-		}
-		loader, _ := settings.Loaders[value.Type().String()]
-		outputValues := reflect.MakeSlice(elementType, 0, len(values))
-		for _, value := range values {
-			loadedValue, err := loader(value)
-			err = fixupLoadingError(err, settings)
-			if err != nil {
-				return err
-			}
-			outputValues = reflect.Append(outputValues, loadedValue)
-		}
-		value.Set(outputValues)
-		return nil
-	}
-	if isLoadable(reflect.New(elementType).Elem()) {
-		values, err := c.GetStrings(path, settings.Delim)
-		if err == nil {
-			return err
-		}
-		outputValues := reflect.MakeSlice(elementType, 0, len(values))
-		for _, value := range values {
-			outputValue :=  reflect.New(elementType)
-			if loadableValue, converted := outputValue.Interface().(Loadable); converted {
-				err = loadableValue.LoadValueFromConfig(value)
-				err = fixupLoadingError(err, settings)
-				if err != nil {
-					return err
-				}
-			}
-			outputValues = reflect.Append(outputValues, outputValue)
-		}
-		value.Set(outputValues)
-		return nil
-	}
-	valueKind := elementType.Kind()
-	switch valueKind {
-	case reflect.Bool:
-		fallthrough
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		fallthrough
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		fallthrough
-	case reflect.Float32, reflect.Float64:
-		fallthrough
-	case reflect.String:
-		loader := getArrayValuesLoader(c, settings, path, valueKind)
-		var loadedValue reflect.Value
-		if loadedValue, err = loader(); err == nil{
-			value.Set(loadedValue)
-		}
-	default:
-		err = ErrorUnsupportedFieldTypeToLoadValue
-	}
-	return fixupLoadingError(err, settings)
-}
-
-func loadStructValueUsingCustomLoader(c Config, settings LoadSettings, path string,
-	value reflect.Value) error {
-
-	if loader, exist := settings.Loaders[value.Type().String()]; exist {
-		if data, err := c.GetString(path); err == nil {
-			loadedValue, err := loader(data)
-			if err == nil {
-				value.Set(loadedValue)
-			}
-			return fixupLoadingError(err, settings)
-		}
-	}
-	return nil
-}
-
-func loadStructValueUsingLoadable(c Config, settings LoadSettings, path string,
-	value reflect.Value) error {
-
-	if loadableValue, converted := value.Interface().(Loadable); converted {
-		if data, err := c.GetString(path); err == nil {
-			err = loadableValue.LoadValueFromConfig(data)
-			return fixupLoadingError(err, settings)
-		}
-	}
-	return nil
-}
-
-func loadStructValueByFields(c Config, settings LoadSettings, path string,
-	value reflect.Value) (err error) {
-
-	for i := 0; i < value.NumField() && err == nil; i += 1 {
-		fieldValue := value.Field(i)
-		fieldPath := joinPath(path, getFieldName(value, i))
-		err = loadValue(c, settings, fieldPath, fieldValue)
-		err = fixupLoadingError(err, settings)
-	}
-	return err
-}
-
 func existCustomLoader(settings LoadSettings, value reflect.Value) bool {
 	_, exist := settings.Loaders[value.Type().String()]
 	return exist
@@ -263,6 +186,55 @@ func isLoadable(value reflect.Value) bool {
 	return value.Type().Implements(loadableType)
 }
 
+func createSliceLoader(values []string, settings LoadSettings, value reflect.Value, loader StringValueLoader) valueLoader {
+	return func() (reflect.Value, error) {
+		var err error
+		outputValues := reflect.MakeSlice(value.Type(), 0, len(values))
+		for _, data := range values {
+			var loadedValue reflect.Value
+			loadedValue, err = loader(data)
+			if err != nil {
+				break;
+			}
+			outputValues = reflect.Append(outputValues, loadedValue)
+		}
+		return outputValues, err
+	}
+}
+
+func loadStructValueUsingCustomLoaderByValue(data string, settings LoadSettings,
+	value reflect.Value) error {
+
+	if loader, exist := settings.Loaders[value.Type().String()]; exist {
+		loadedValue, err := loader(data)
+		if err != nil {
+			return err
+		}
+		value.Set(loadedValue)
+	}
+	return nil
+}
+
+func loadStructValueUsingLoadableByValue(data string, settings LoadSettings,
+	value reflect.Value) error {
+
+	if loadableValue, converted := value.Interface().(Loadable); converted {
+		return loadableValue.LoadValueFromConfig(data)
+	}
+	return nil
+}
+
+func loadStructValueByFields(c Config, settings LoadSettings, path string,
+	value reflect.Value) (err error) {
+
+	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i += 1 {
+		fieldValue := value.Field(i)
+		fieldPath := joinPath(path, getFieldName(value, i))
+		err = loadValue(c, settings, fieldPath, fieldValue)
+	}
+	return err
+}
+
 func getFieldName(value reflect.Value, i int) string {
 	fieldType := value.Type().Field(i)
 	fieldName := fieldType.Tag.Get(TAG_KEY)
@@ -270,11 +242,4 @@ func getFieldName(value reflect.Value, i int) string {
 		return fieldName
 	}
 	return fieldType.Name
-}
-
-func fixupLoadingError(err error, settings LoadSettings) error {
-	if settings.IgnoreErrors {
-		return nil
-	}
-	return err
 }

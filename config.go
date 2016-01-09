@@ -24,7 +24,7 @@ var (
 	ErrorIncorrectPath = errors.New("Incorrect path")
 	ErrorUnknownConfigType = errors.New("Unknown config type")
 	ErrorIncorrectValueType = errors.New("Incorrect value type")
-	ErrorUnsupportedFieldTypeToLoadValue = errors.New("Unsupported field type")
+	ErrorUnsupportedTypeToLoadValue = errors.New("Unsupported field type")
 	ErrorIncorrectValueToLoadFromConfig = errors.New("Inccorect value to load from config")
 )
 
@@ -70,6 +70,14 @@ func ReadConfigFromReader(configReader io.Reader, configType string) (Config, er
 	if err != nil {
 		return nil, err
 	}
+	return CreateConfig(configData, configType)
+}
+
+func CreateConfigFromString(configData string, configType string) (Config, error) {
+	return CreateConfig([]byte(configData), configType)
+}
+
+func CreateConfig(configData []byte, configType string) (Config, error) {
 	creator, err := getConfigCreator(configType)
 	if err != nil {
 		return nil, err
