@@ -68,15 +68,7 @@ func TestManyLevelYamlLoadValue(t *testing.T) {
 	err = LoadValueIgnoringErrors(config, "/root/child/grandchild/first", &value)
 	require.NoError(t, err, "Cannot load value from config")
 
-	checkStringValue(t, value.StringElement)
-	checkBoolValue(t, value.BoolElement)
-	checkFloatValue(t, value.FloatElement)
-	checkIntValue(t, value.IntElement)
-
-	checkStringValues(t, value.StringElements)
-	checkBoolValues(t, value.BoolElements)
-	checkFloatValues(t, value.FloatElements)
-	checkIntValues(t, value.IntElements)
+	value.Check(t)
 }
 
 func TestManyLevelYamlGetConfigPart(t *testing.T) {

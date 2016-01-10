@@ -1,16 +1,15 @@
 package config
 
 import (
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 // Helpers to get and check values.
 func checkEqual(t *testing.T, value, expected interface{}) {
-	if !reflect.DeepEqual(value, expected) {
-		t.Errorf("Incorrect value: expected - %v, actual - %v",  expected, value)
-	}
+	require.Equal(t, expected, value)
 }
 
 // Test helpers for single value.
@@ -161,4 +160,20 @@ type configData struct {
 	TimeElement time.Time `config:"timeElement"`
 	DurationElements []time.Duration `config:"durationElements"`
 	TimeElements []time.Time `config:"timeElements"`
+}
+
+func (data configData) Check(t *testing.T) {
+	checkStringValue(t, data.StringElement)
+	checkBoolValue(t, data.BoolElement)
+	checkFloatValue(t, data.FloatElement)
+	checkIntValue(t, data.IntElement)
+	checkDurationValue(t, data.DurationElement)
+	checkTimeValue(t, data.TimeElement)
+
+	checkStringValues(t, data.StringElements)
+	checkBoolValues(t, data.BoolElements)
+	checkFloatValues(t, data.FloatElements)
+	checkIntValues(t, data.IntElements)
+	checkDurationValues(t, data.DurationElements)
+	checkTimeValues(t, data.TimeElements)
 }
