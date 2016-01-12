@@ -113,6 +113,17 @@ func TestIncorrectYamlConfig(t *testing.T) {
 	require.Error(t, err, "Incorrect yaml-config parsed successfully")
 }
 
+func TestYamlGetValueEmptyPath(t *testing.T) {
+	config, err := newYamlConfig([]byte(`element: value`))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	_, err = config.GetString("")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
 func TestYamlGetAbsentValue(t *testing.T) {
 	config, err := newYamlConfig([]byte(`element: value`))
 	require.NoError(t, err, "Cannot parse yaml-config")
@@ -121,6 +132,14 @@ func TestYamlGetAbsentValue(t *testing.T) {
 	require.Error(t, err, ErrorNotFound.Error())
 
 	_, err = config.GetStrings("/root", DEFAULT_ARRAY_DELIMITER)
+	require.Error(t, err, ErrorNotFound.Error())
+}
+
+func TestYamlGetAbsentConfigPart(t *testing.T) {
+	config, err := newYamlConfig([]byte(`element: value`))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	_, err = config.GetConfigPart("/root")
 	require.Error(t, err, ErrorNotFound.Error())
 }
 

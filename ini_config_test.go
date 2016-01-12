@@ -96,6 +96,17 @@ func TestIncorrectIniConfig(t *testing.T) {
 	require.Error(t, err, "Incorrect ini-config parsed successfully")
 }
 
+func TestIniGetValueEmptyPath(t *testing.T) {
+	config, err := newIniConfig([]byte(""))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	_, err = config.GetString("")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
 func TestEmptyIniGetAbsentValue(t *testing.T) {
 	config, err := newIniConfig([]byte(""))
 	require.NoError(t, err, "Cannot parse ini-config")

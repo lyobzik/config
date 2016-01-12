@@ -137,9 +137,12 @@ func (c *yamlConfig) GetConfigPart(path string) (Config, error) {
 
 // Yaml helpers.
 func (c *yamlConfig) findElement(path string) (interface{}, error) {
-	var element interface{}
-	element = c.data
-	for _, pathPart := range splitPath(path) {
+	element := c.data
+	pathParts := splitPath(path)
+	if len(pathParts) == 0 {
+		return nil, ErrorNotFound
+	}
+	for _, pathPart := range pathParts {
 		part, converted := element.(map[interface{}]interface{})
 		if !converted {
 			return nil, ErrorNotFound

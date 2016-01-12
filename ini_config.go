@@ -174,14 +174,14 @@ func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 	pathParts := splitPath(path)
 	if c.key != nil {
 		if len(pathParts) != 0 {
-			return nil, ErrorIncorrectPath
+			return nil, ErrorNotFound
 		}
 		return c.key, nil
 	}
 
 	if c.section != nil {
 		if len(pathParts) != 1 {
-			return nil, ErrorIncorrectPath
+			return nil, ErrorNotFound
 		}
 		key, _ := c.section.GetKey(pathParts[0])
 		if key == nil {
@@ -192,7 +192,7 @@ func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 
 	if c.file != nil {
 		if len(pathParts) < 1 || 2 < len(pathParts) {
-			return nil, ErrorIncorrectPath
+			return nil, ErrorNotFound
 		}
 		var section *ini.Section
 		if len(pathParts) == 1 && len(c.file.Sections()) == 1 {

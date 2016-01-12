@@ -117,6 +117,17 @@ func TestIncorrectXmlConfig(t *testing.T) {
 	require.Error(t, err, "Incorrect xml-config parsed successfully")
 }
 
+func TestXmlGetValueEmptyPath(t *testing.T) {
+	config, err := newXmlConfig([]byte(`<xml/>`))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	_, err = config.GetString("")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
 func TestXmlGetAbsentValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
@@ -135,6 +146,14 @@ func TestXmlGetAbsentAttributeValue(t *testing.T) {
 
 	_, err = config.GetString("/xml/@element")
 	require.Error(t, err, "Attribute must be absent")
+}
+
+func TestXmlGetAbsentConfigPart(t *testing.T) {
+	config, err := newXmlConfig([]byte(`<xml/>`))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	_, err = config.GetConfigPart("/root")
+	require.Error(t, err, ErrorNotFound.Error())
 }
 
 func TestXmlGetValueOfIncorrectType(t *testing.T) {

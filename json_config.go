@@ -136,9 +136,12 @@ func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
 
 // Json helpers.
 func (c *jsonConfig) findElement(path string) (interface{}, error) {
-	var element interface{}
-	element = c.data
-	for _, pathPart := range splitPath(path) {
+	element := c.data
+	pathParts := splitPath(path)
+	if len(pathParts) == 0 {
+		return nil, ErrorNotFound
+	}
+	for _, pathPart := range pathParts {
 		part, converted := element.(map[string]interface{})
 		if !converted {
 			return nil, ErrorNotFound

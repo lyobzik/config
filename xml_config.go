@@ -206,9 +206,12 @@ func (c *xmlConfig) GetConfigPart(path string) (Config, error) {
 
 // Xml helpers.
 func (c *xmlConfig) findElement(path string) (*xmlElement, string, error) {
-	var element *xmlElement
-	element = c.data
-	for _, pathPart := range splitPath(path) {
+	element := c.data
+	pathParts := splitPath(path)
+	if len(pathParts) == 0 {
+		return nil, "", ErrorNotFound
+	}
+	for _, pathPart := range pathParts {
 		if strings.HasPrefix(pathPart, "@") {
 			if attribute, exist := element.Attributes[pathPart[1:]]; exist {
 				return nil, attribute, nil

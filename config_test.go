@@ -66,3 +66,19 @@ func TestIncorrectConfigType(t *testing.T) {
 	_, err := CreateConfig([]byte{}, "unknownType")
 	require.EqualError(t, err, ErrorUnknownConfigType.Error())
 }
+
+// LoadValue tests.
+func TestLoadEmptyConfig(t *testing.T) {
+	config, err := CreateConfigFromString("{}", JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var initValue int = 5
+	var value int = initValue
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, initValue, value, "Value must be unchanged")
+
+	err = LoadValueIgnoringErrors(config, "/", &value)
+	require.NoError(t, err, "Cannot load value from config")
+	require.Equal(t, initValue, value, "Value must be unchanged")
+}
