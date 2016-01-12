@@ -63,8 +63,6 @@ func loadValue(c Config, settings LoadSettings, path string, value reflect.Value
 	return err
 }
 
-type valueLoader func(string, reflect.Value) (reflect.Value, error)
-
 func loadSingleValue(c Config, settings LoadSettings, path string, value reflect.Value) (reflect.Value, error) {
 	if loader := getCustomLoader(c, settings, value.Type()); loader != nil {
 		if data, err := c.GetString(path); err == nil {
@@ -90,8 +88,7 @@ func loadSingleValue(c Config, settings LoadSettings, path string, value reflect
 	case reflect.Slice:
 		return loadSliceValue(c, settings, path, value)
 	case reflect.Struct:
-		err := loadStructValueByFields(c, settings, path, value)
-		return value, err
+		return loadStructValueByFields(c, settings, path, value)
 	}
 	return reflect.ValueOf(nil), ErrorUnsupportedTypeToLoadValue
 }
@@ -126,6 +123,19 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 	}
 	return reflect.ValueOf(nil), ErrorIncorrectValueToLoadFromConfig
 }
+
+func loadStructValueByFields(c Config, settings LoadSettings, path string,
+	value reflect.Value) (result reflect.Value, err error) {
+
+	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i += 1 {
+		fieldValue := value.Field(i)
+		fieldPath := joinPath(path, getFieldName(value, i))
+		err = loadValue(c, settings, fieldPath, fieldValue)
+	}
+	return value, err
+}
+
+type valueLoader func(string, reflect.Value) (reflect.Value, error)
 
 func getCustomLoader(c Config, settings LoadSettings, valueType reflect.Type) valueLoader {
 	if loader, exist := settings.Loaders[valueType.String()]; exist {
@@ -163,17 +173,6 @@ func loadSlice(values []string, settings LoadSettings, value reflect.Value,
 		}
 	}
 	return outputValues, err
-}
-
-func loadStructValueByFields(c Config, settings LoadSettings, path string,
-	value reflect.Value) (err error) {
-
-	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i += 1 {
-		fieldValue := value.Field(i)
-		fieldPath := joinPath(path, getFieldName(value, i))
-		err = loadValue(c, settings, fieldPath, fieldValue)
-	}
-	return err
 }
 
 func getFieldName(value reflect.Value, i int) string {
