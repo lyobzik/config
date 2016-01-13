@@ -181,4 +181,10 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+
+	_, err = config.GetInt("/floatElement")
+	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+
+	_, err = config.GetInts("/floatElements", DEFAULT_ARRAY_DELIMITER)
+	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }

@@ -186,4 +186,12 @@ func TestXmlGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetFloats("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+
+	_, err = config.GetInt("/xml/floatElement")
+	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+
+	_, err = config.GetInts("/xml/floatElements", DEFAULT_ARRAY_DELIMITER)
+	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+
+
 }

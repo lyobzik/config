@@ -198,30 +198,30 @@ func TestIniGetValueOfIncorrectType(t *testing.T) {
 	config, err := newIniConfig([]byte(oneLevelIniConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	_, err = config.GetBool("/xml/stringElement")
+	_, err = config.GetBool("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInt("/xml/stringElement")
+	_, err = config.GetInt("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloat("/xml/stringElement")
+	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElement", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElement", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElement", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }

@@ -100,19 +100,27 @@ func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error
 }
 
 func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err error) {
-	key, err := c.findKey(path)
-	if err != nil {
-		return value, err
-	}
-	return key.Float64s(delim), nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]float64, 0, cap) },
+		func(data string) error {
+			var parsed float64
+			if parsed, err = strconv.ParseFloat(data, 64); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error) {
-	key, err := c.findKey(path)
-	if err != nil {
-		return value, err
-	}
-	return key.Int64s(delim), nil
+	return value, GrabStringValues(c, path, delim,
+		func(cap int) { value = make([]int64, 0, cap) },
+		func(data string) error {
+			var parsed int64
+			if parsed, err = strconv.ParseInt(data, 10, 64); err == nil {
+				value = append(value, parsed)
+			}
+			return err
+		})
 }
 
 // Get subconfig.
