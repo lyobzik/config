@@ -154,22 +154,20 @@ func TestYamlGetValueEmptyPath(t *testing.T) {
 	config, err := newYamlConfig([]byte(`element: value`))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	_, err = config.GetString("")
-	require.EqualError(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
-	require.EqualError(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "")
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestYamlGetAbsentValue(t *testing.T) {
 	config, err := newYamlConfig([]byte(`element: value`))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	_, err = config.GetString("/root")
-	require.Error(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("/root", DEFAULT_ARRAY_DELIMITER)
-	require.Error(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/root")
+		require.Error(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestYamlGetAbsentConfigPart(t *testing.T) {

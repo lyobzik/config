@@ -197,30 +197,30 @@ func TestXmlGetValueEmptyPath(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	_, err = config.GetString("")
-	require.EqualError(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
-	require.EqualError(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "")
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestXmlGetAbsentValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	_, err = config.GetString("/xml/element")
-	require.Error(t, err, "Attribute must be absent")
-
-	_, err = config.GetStrings("/xml/element", " ")
-	require.Error(t, err, "Attribute must be absent")
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/xml/element")
+		require.Error(t, err, "Attribute must be absent")
+	}
 }
 
 func TestXmlGetAbsentAttributeValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	_, err = config.GetString("/xml/@element")
-	require.Error(t, err, "Attribute must be absent")
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/xml/@element")
+		require.Error(t, err, "Attribute must be absent")
+	}
 }
 
 func TestXmlGetAbsentConfigPart(t *testing.T) {

@@ -176,98 +176,67 @@ func TestIniGetValueEmptyPath(t *testing.T) {
 	config, err := newIniConfig([]byte(""))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	_, err = config.GetString("")
-	require.EqualError(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
-	require.EqualError(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "")
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestEmptyIniGetAbsentValue(t *testing.T) {
 	config, err := newIniConfig([]byte(""))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	_, err = config.GetString("/")
-	require.Error(t, err, "Parameter must be absent")
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetString("/element")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/child/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/child/element", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/child/element")
+		require.Error(t, err, "Parameter must be absent")
+	}
 }
 
 func TestOneLevelIniGetAbsentValue(t *testing.T) {
 	config, err := newIniConfig([]byte(oneLevelIniConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	_, err = config.GetString("/")
-	require.Error(t, err, "Parameter must be absent")
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetString("/element")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/child/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/child/element", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/child/element")
+		require.Error(t, err, "Parameter must be absent")
+	}
 }
 
 func TestTwoLevelIniGetAbsentValue(t *testing.T) {
 	config, err := newIniConfig([]byte(twoLevelIniConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	_, err = config.GetString("/")
-	require.Error(t, err, "Parameter must be absent")
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetString("/element")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/element")
+		require.Error(t, err, "Parameter must be absent")
 
-	_, err = config.GetStrings("/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/element", " ")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetString("/first/child/element")
-	require.Error(t, err, "Parameter must be absent")
-
-	_, err = config.GetStrings("/first/child/element", " ")
-	require.Error(t, err, "Parameter must be absent")
+		_, err = functors.Getter(config, "/first/child/element")
+		require.Error(t, err, "Parameter must be absent")
+	}
 }
 
 func TestIniGetValueOfIncorrectType(t *testing.T) {

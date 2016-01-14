@@ -153,22 +153,20 @@ func TestJsonGetValueEmptyPath(t *testing.T) {
 	config, err := newJsonConfig([]byte(`{"element": "value"}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	_, err = config.GetString("")
-	require.EqualError(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("", DEFAULT_ARRAY_DELIMITER)
-	require.EqualError(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "")
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestJsonGetAbsentValue(t *testing.T) {
 	config, err := newJsonConfig([]byte(`{"element": "value"}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	_, err = config.GetString("/root")
-	require.Error(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetStrings("/root", DEFAULT_ARRAY_DELIMITER)
-	require.Error(t, err, ErrorNotFound.Error())
+	for _, functors := range elementFunctors {
+		_, err = functors.Getter(config, "/root")
+		require.Error(t, err, ErrorNotFound.Error())
+	}
 }
 
 func TestJsonGetAbsentConfigPart(t *testing.T) {
