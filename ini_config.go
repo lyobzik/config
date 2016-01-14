@@ -2,7 +2,6 @@ package config
 
 import (
 	ini "gopkg.in/ini.v1"
-	"strconv"
 )
 
 type iniConfig struct {
@@ -22,27 +21,13 @@ func newIniConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *iniConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	value, err := c.GetString(path)
-	if err != nil {
-		return err
-	}
-	return grabber(value)
+	return GrabStringValue(c, path, createIniValueGrabber(grabber))
 }
 
 func (c *iniConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	values, err := c.GetStrings(path, delim)
-	if err != nil {
-		return err
-	}
-	creator(len(values))
-	for _, value := range values {
-		if err = grabber(value); err != nil {
-			return err
-		}
-	}
-	return nil
+	return GrabStringValues(c, path, delim, creator, createIniValueGrabber(grabber))
 }
 
 // Get single value.
@@ -92,7 +77,7 @@ func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error
 		func(cap int) { value = make([]bool, 0, cap) },
 		func(data string) error {
 			var parsed bool
-			if parsed, err = strconv.ParseBool(data); err == nil {
+			if parsed, err = parseIniBool(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -104,7 +89,7 @@ func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err e
 		func(cap int) { value = make([]float64, 0, cap) },
 		func(data string) error {
 			var parsed float64
-			if parsed, err = strconv.ParseFloat(data, 64); err == nil {
+			if parsed, err = parseIniFloat(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -116,7 +101,7 @@ func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error
 		func(cap int) { value = make([]int64, 0, cap) },
 		func(data string) error {
 			var parsed int64
-			if parsed, err = strconv.ParseInt(data, 10, 64); err == nil {
+			if parsed, err = parseIniInt(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -218,4 +203,22 @@ func (c *iniConfig) findKey(path string) (*ini.Key, error) {
 		return key, nil
 	}
 	return nil, ErrorNotFound
+}
+
+// Ini value parsers.
+func parseIniBool(data string) (bool, error) {
+	return parseXmlBool(data)
+}
+
+func parseIniFloat(data string) (float64, error) {
+	return parseXmlFloat(data)
+}
+
+func parseIniInt(data string) (int64, error) {
+	return parseXmlInt(data)
+}
+
+// Grabbing helpers.
+func createIniValueGrabber(grabber ValueGrabber) StringValueGrabber {
+	return createXmlValueGrabber(grabber)
 }

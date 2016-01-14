@@ -88,27 +88,13 @@ func newXmlConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *xmlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	if element, err := c.GetString(path); err == nil {
-		return grabber(element)
-	} else {
-		return err
-	}
+	return GrabStringValue(c, path, createXmlValueGrabber(grabber))
 }
 
 func (c *xmlConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	values, err := c.GetStrings(path, delim)
-	if err != nil {
-		return err
-	}
-	creator(len(values))
-	for _, value := range values {
-		if err = grabber(value); err != nil {
-			return err
-		}
-	}
-	return nil
+	return GrabStringValues(c, path, delim, creator, createXmlValueGrabber(grabber))
 }
 
 // Get single value.
@@ -250,4 +236,11 @@ func parseXmlInt(data string) (value int64, err error) {
 		return 0, ErrorIncorrectValueType
 	}
 	return value, nil
+}
+
+// Grabbing helpers.
+func createXmlValueGrabber(grabber ValueGrabber) StringValueGrabber {
+	return func(data string) error {
+		return grabber(data)
+	}
 }

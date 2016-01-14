@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"testing"
 	"fmt"
 
@@ -111,6 +112,81 @@ func TestXmlGetEmptyStrings(t *testing.T) {
 	require.Empty(t, value)
 }
 
+func TestXmlGrabValue(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	var intValue int64
+	var convertingError error
+	var isStringData bool
+	err = config.GrabValue("/xml/intElement", func(data interface{}) error {
+		var stringData string
+		if stringData, isStringData = data.(string); !isStringData {
+			return errors.New("Incorrect data type")
+		}
+		intValue, convertingError = parseXmlInt(stringData)
+		return nil
+	})
+
+	require.NoError(t, err, "Cannot grab value from xml-config")
+	require.True(t, isStringData, "Data must be string")
+	require.NoError(t, convertingError, "Cannot convert intElement to int")
+	checkIntValue(t, intValue)
+}
+
+func TestXmlGrabValues(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	var intValues []int64
+	var isStringData bool
+	err = config.GrabValues("/xml/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			var stringData string
+			if stringData, isStringData = data.(string); !isStringData {
+				return errors.New("Incorrect data type")
+			}
+			value, err := parseXmlInt(stringData)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from xml-config")
+	require.True(t, isStringData, "Data must be string")
+	checkIntValues(t, intValues)
+}
+
+func TestXmlGrabValuesOfSingleElement(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	var intValues []int64
+	var isStringData bool
+	err = config.GrabValues("/xml/intElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			var stringData string
+			if stringData, isStringData = data.(string); !isStringData {
+				return errors.New("Incorrect data type")
+			}
+			value, err := parseXmlInt(stringData)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from xml-config")
+	require.True(t, isStringData, "Data must be string")
+	require.Len(t, intValues, 1)
+	checkIntValue(t, intValues[0])
+}
+
 // Negative tests.
 func TestIncorrectXmlConfig(t *testing.T) {
 	_, err := newXmlConfig([]byte("<root"))
@@ -137,7 +213,6 @@ func TestXmlGetAbsentValue(t *testing.T) {
 
 	_, err = config.GetStrings("/xml/element", " ")
 	require.Error(t, err, "Attribute must be absent")
-
 }
 
 func TestXmlGetAbsentAttributeValue(t *testing.T) {
@@ -192,6 +267,60 @@ func TestXmlGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetInts("/xml/floatElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+}
 
+func TestXmlGrabAbsentValue(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
 
+	executed := false
+	err = config.GrabValue("/xml/absentElement", func(data interface{}) error {
+		executed = true
+		return nil
+	})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestXmlGrabAbsentValues(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	executed := false
+	err = config.GrabValues("/xml/absentElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {executed = true},
+		func(data interface{}) error {
+			executed = true
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestXmlGrabValuePassError(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	expectedError := errors.New("TestXmlGrabValuePassError error")
+	err = config.GrabValue("/xml/intElement", func(data interface{}) error {
+		return expectedError
+	})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestXmlGrabValuesPassError(t *testing.T) {
+	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	expectedError := errors.New("TestXmlGrabValuesPassError error")
+	err = config.GrabValues("/xml/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return expectedError
+		})
+
+	require.EqualError(t, err, expectedError.Error())
 }

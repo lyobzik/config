@@ -21,31 +21,17 @@ func newYamlConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *yamlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	if element, err := c.findElement(path); err == nil {
-		return grabber(element)
-	} else {
+	element, err := c.findElement(path)
+	if err != nil {
 		return err
 	}
+	return grabber(element)
 }
 
 func (c *yamlConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	element, err := c.findElement(path)
-	if err != nil {
-		return err
-	}
-	values, converted := element.([]interface{})
-	if !converted {
-		return ErrorIncorrectValueType
-	}
-	creator(len(values))
-	for _, value := range values {
-		if err = grabber(value); err != nil {
-			return err
-		}
-	}
-	return nil
+	return c.GrabValue(path, createYamlValueGrabber(creator, grabber))
 }
 
 // Get single value.
@@ -183,4 +169,9 @@ func parseYamlInt(data interface{}) (value int64, err error) {
 		return value, ErrorIncorrectValueType
 	}
 	return value, ErrorIncorrectValueType
+}
+
+// Grabbing helpers.
+func createYamlValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
+	return createJsonValueGrabber(creator, grabber)
 }

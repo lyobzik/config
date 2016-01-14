@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"testing"
 	"strings"
 	"fmt"
@@ -107,6 +108,42 @@ func TestYamlGetFloatAsInt(t *testing.T) {
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }
 
+func TestYamlGrabValue(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	var intValue int64
+	var convertingError error
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		intValue, convertingError = parseYamlInt(data)
+		return nil
+	})
+
+	require.NoError(t, err, "Cannot grab value from yaml-config")
+	require.NoError(t, convertingError, "Cannot convert intElement to int")
+	checkIntValue(t, intValue)
+}
+
+func TestYamlGrabValues(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	var intValues []int64
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			value, err := parseYamlInt(data)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from yaml-config")
+	checkIntValues(t, intValues)
+}
+
 // Negative tests.
 func TestIncorrectYamlConfig(t *testing.T) {
 	_, err := newYamlConfig([]byte("{"))
@@ -188,4 +225,73 @@ func TestYamlGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetInts("/floatElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+}
+
+func TestYamlGrabAbsentValue(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	executed := false
+	err = config.GrabValue("/absentElement", func(data interface{}) error {
+		executed = true
+		return nil
+	})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestYamlGrabAbsentValues(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	executed := false
+	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {executed = true},
+		func(data interface{}) error {
+			executed = true
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestYamlGrabValuePassError(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	expectedError := errors.New("TestYamlGrabValuePassError error")
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		return expectedError
+	})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestYamlGrabValuesPassError(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	expectedError := errors.New("TestYamlGrabValuesPassError error")
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return expectedError
+		})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestYamlGrabValuesOfSingleElement(t *testing.T) {
+	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }

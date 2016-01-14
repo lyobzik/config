@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/require"
+	"errors"
 )
 
 var (
@@ -88,6 +89,81 @@ func TestIniGetEmptyStrings(t *testing.T) {
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
+}
+
+func TestIniGrabValue(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	var intValue int64
+	var convertingError error
+	var isStringData bool
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		var stringData string
+		if stringData, isStringData = data.(string); !isStringData {
+			return errors.New("Incorrect data type")
+		}
+		intValue, convertingError = parseIniInt(stringData)
+		return nil
+	})
+
+	require.NoError(t, err, "Cannot grab value from ini-config")
+	require.True(t, isStringData, "Data must be string")
+	require.NoError(t, convertingError, "Cannot convert intElement to int")
+	checkIntValue(t, intValue)
+}
+
+func TestIniGrabValues(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	var intValues []int64
+	var isStringData bool
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			var stringData string
+			if stringData, isStringData = data.(string); !isStringData {
+				return errors.New("Incorrect data type")
+			}
+			value, err := parseIniInt(stringData)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from ini-config")
+	require.True(t, isStringData, "Data must be string")
+	checkIntValues(t, intValues)
+}
+
+func TestIniGrabValuesOfSingleElement(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	var intValues []int64
+	var isStringData bool
+	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			var stringData string
+			if stringData, isStringData = data.(string); !isStringData {
+				return errors.New("Incorrect data type")
+			}
+			value, err := parseIniInt(stringData)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from ini-config")
+	require.True(t, isStringData, "Data must be string")
+	require.Len(t, intValues, 1)
+	checkIntValue(t, intValues[0])
 }
 
 // Negative tests.
@@ -224,4 +300,60 @@ func TestIniGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+}
+
+func TestIniGrabAbsentValue(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	executed := false
+	err = config.GrabValue("/absentElement", func(data interface{}) error {
+		executed = true
+		return nil
+	})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestIniGrabAbsentValues(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	executed := false
+	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {executed = true},
+		func(data interface{}) error {
+			executed = true
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestIniGrabValuePassError(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	expectedError := errors.New("TestIniGrabValuePassError error")
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		return expectedError
+	})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestIniGrabValuesPassError(t *testing.T) {
+	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.NoError(t, err, "Cannot parse ini-config")
+
+	expectedError := errors.New("TestIniGrabValuesPassError error")
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return expectedError
+		})
+
+	require.EqualError(t, err, expectedError.Error())
 }

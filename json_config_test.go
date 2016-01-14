@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"testing"
 	"fmt"
 
@@ -106,6 +107,42 @@ func TestJsonGetFloatAsInt(t *testing.T) {
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }
 
+func TestJsonGrabValue(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	var intValue int64
+	var convertingError error
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		intValue, convertingError = parseJsonInt(data)
+		return nil
+	})
+
+	require.NoError(t, err, "Cannot grab value from json-config")
+	require.NoError(t, convertingError, "Cannot convert intElement to int")
+	checkIntValue(t, intValue)
+}
+
+func TestJsonGrabValues(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	var intValues []int64
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) { intValues = make([]int64, 0, length) },
+		func(data interface{}) error {
+			value, err := parseJsonInt(data)
+			if err != nil {
+				return err
+			}
+			intValues = append(intValues, value)
+			return nil
+		})
+
+	require.NoError(t, err, "Cannot grab value from json-config")
+	checkIntValues(t, intValues)
+}
+
 // Negative tests.
 func TestIncorrectJsonConfig(t *testing.T) {
 	_, err := newJsonConfig([]byte("{"))
@@ -187,4 +224,73 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 
 	_, err = config.GetInts("/floatElements", DEFAULT_ARRAY_DELIMITER)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
+}
+
+func TestJsonGrabAbsentValue(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	executed := false
+	err = config.GrabValue("/absentElement", func(data interface{}) error {
+		executed = true
+		return nil
+	})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestJsonGrabAbsentValues(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	executed := false
+	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {executed = true},
+		func(data interface{}) error {
+			executed = true
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorNotFound.Error())
+	require.Equal(t, false, executed, "Value grabber must not be executed")
+}
+
+func TestJsonGrabValuePassError(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	expectedError := errors.New("TestJsonGrabValuePassError error")
+	err = config.GrabValue("/intElement", func(data interface{}) error {
+		return expectedError
+	})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestJsonGrabValuesPassError(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	expectedError := errors.New("TestJsonGrabValuesPassError error")
+	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return expectedError
+		})
+
+	require.EqualError(t, err, expectedError.Error())
+}
+
+func TestJsonGrabValuesOfSingleElement(t *testing.T) {
+	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+		func(length int) {},
+		func(data interface{}) error {
+			return nil
+		})
+
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }

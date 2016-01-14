@@ -20,31 +20,17 @@ func newJsonConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	if element, err := c.findElement(path); err == nil {
-		return grabber(element)
-	} else {
+	element, err := c.findElement(path)
+	if err != nil {
 		return err
 	}
+	return grabber(element)
 }
 
 func (c *jsonConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	element, err := c.findElement(path)
-	if err != nil {
-		return err
-	}
-	values, converted := element.([]interface{})
-	if !converted {
-		return ErrorIncorrectValueType
-	}
-	creator(len(values))
-	for _, value := range values {
-		if err = grabber(value); err != nil {
-			return err
-		}
-	}
-	return nil
+	return c.GrabValue(path, createJsonValueGrabber(creator, grabber))
 }
 
 // Get single value.
@@ -187,4 +173,21 @@ func parseJsonInt(data interface{}) (value int64, err error) {
 		return int64(floatingValue), nil
 	}
 	return value, ErrorIncorrectValueType
+}
+
+// Grabbing helpers.
+func createJsonValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
+	return func(element interface{}) (err error) {
+		values, converted := element.([]interface{})
+		if !converted {
+			return ErrorIncorrectValueType
+		}
+		creator(len(values))
+		for _, value := range values {
+			if err = grabber(value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
