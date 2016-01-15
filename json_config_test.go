@@ -292,3 +292,73 @@ func TestJsonGrabValuesOfSingleElement(t *testing.T) {
 
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
+
+func TestJsonIncorrectInnerData(t *testing.T) {
+	config := &jsonConfig{data: 1}
+
+
+	for element, functors := range elementFunctors {
+		_, err := functors.Getter(config, element)
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
+}
+
+// Parser tests.
+func TestParseJsonString(t *testing.T) {
+	value, err := parseJsonString(expectedStringValue)
+	require.NoError(t, err, "Cannot parse json string")
+	checkStringValue(t, value)
+
+	_, err = parseJsonString(expectedIntValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseJsonString(expectedStringValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseJsonBool(t *testing.T) {
+	value, err := parseJsonBool(expectedBoolValue)
+	require.NoError(t, err, "Cannot parse json bool")
+	checkBoolValue(t, value)
+
+	_, err = parseJsonBool(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseJsonBool(expectedBoolValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseJsonFloat(t *testing.T) {
+	value, err := parseJsonFloat(expectedFloatValue)
+	require.NoError(t, err, "Cannot parse json float")
+	checkFloatValue(t, value)
+
+	_, err = parseJsonFloat(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseJsonFloat(expectedFloatValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseJsonInt(t *testing.T) {
+	value, err := parseJsonInt(expectedIntValue)
+	require.NoError(t, err, "Cannot parse json int")
+	checkIntValue(t, value)
+
+	value, err = parseJsonInt(int(expectedIntValue))
+	require.NoError(t, err, "Cannot parse json int")
+	checkIntValue(t, value)
+
+	value, err = parseJsonInt(float64(expectedIntValue))
+	require.NoError(t, err, "Cannot parse json int")
+	checkIntValue(t, value)
+
+	_, err = parseJsonInt(float64(expectedIntValue) + 0.00000001)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseJsonInt(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseJsonInt(expectedIntValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}

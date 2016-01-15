@@ -293,3 +293,73 @@ func TestYamlGrabValuesOfSingleElement(t *testing.T) {
 
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
+
+func TestYamlIncorrectInnerData(t *testing.T) {
+	config := &yamlConfig{data: 1}
+
+
+	for element, functors := range elementFunctors {
+		_, err := functors.Getter(config, element)
+		require.EqualError(t, err, ErrorNotFound.Error())
+	}
+}
+
+// Parser tests.
+func TestParseYamlString(t *testing.T) {
+	value, err := parseYamlString(expectedStringValue)
+	require.NoError(t, err, "Cannot parse yaml string")
+	checkStringValue(t, value)
+
+	_, err = parseYamlString(expectedIntValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseYamlString(expectedStringValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseYamlBool(t *testing.T) {
+	value, err := parseYamlBool(expectedBoolValue)
+	require.NoError(t, err, "Cannot parse yaml bool")
+	checkBoolValue(t, value)
+
+	_, err = parseYamlBool(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseYamlBool(expectedBoolValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseYamlFloat(t *testing.T) {
+	value, err := parseYamlFloat(expectedFloatValue)
+	require.NoError(t, err, "Cannot parse yaml float")
+	checkFloatValue(t, value)
+
+	_, err = parseYamlFloat(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseYamlFloat(expectedFloatValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseYamlInt(t *testing.T) {
+	value, err := parseYamlInt(expectedIntValue)
+	require.NoError(t, err, "Cannot parse yaml int")
+	checkIntValue(t, value)
+
+	value, err = parseYamlInt(int(expectedIntValue))
+	require.NoError(t, err, "Cannot parse yaml int")
+	checkIntValue(t, value)
+
+	value, err = parseYamlInt(float64(expectedIntValue))
+	require.NoError(t, err, "Cannot parse yaml int")
+	checkIntValue(t, value)
+
+	_, err = parseYamlInt(float64(expectedIntValue) + 0.00000001)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseYamlInt(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseYamlInt(expectedIntValues)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}

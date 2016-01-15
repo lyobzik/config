@@ -7,7 +7,44 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	expectedStringValue = "value"
+	expectedBoolValue = true
+	expectedFloatValue = 1.23456
+	expectedIntValue = int64(123456)
+
+	expectedDurationValue = parseExpectedDurations("2h45m5s150ms")[0]
+	expectedTimeValue = parseExpectedTimes("2006-01-02T15:04:05+07:00")[0]
+
+	expectedStringValues = []string{"value1", "value2", "value3"}
+	expectedBoolValues = []bool{true, false, true}
+	expectedFloatValues = []float64{1.23, 4.56, 7.89}
+	expectedIntValues = []int64{123, 456, 789}
+
+	expectedDurationValues = parseExpectedDurations("1h", "1h15m30s450ms", "1s750ms")
+	expectedTimeValues = parseExpectedTimes("2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z",
+		"1999-12-31T23:59:59+00:00")
+)
+
 // Helpers to get and check values.
+func parseExpectedDurations(values... string) []time.Duration {
+	result := make([]time.Duration, 0)
+	for _, value := range values {
+		duration, _ := time.ParseDuration(value)
+		result = append(result, duration)
+	}
+	return result
+}
+
+func parseExpectedTimes(values... string) []time.Time {
+	result := make([]time.Time, 0)
+	for _, value := range values {
+		time, _ := time.Parse(time.RFC3339, value)
+		result = append(result, time)
+	}
+	return result
+}
+
 func checkEqual(t *testing.T, value, expected interface{}) {
 	require.Equal(t, expected, value)
 }
@@ -18,7 +55,7 @@ func getStringValue(config Config, path string) (interface{}, error) {
 }
 
 func checkStringValue(t *testing.T, value interface{}) {
-	checkEqual(t, value, "value")
+	checkEqual(t, value, expectedStringValue)
 }
 
 func getBoolValue(config Config, path string) (interface{}, error) {
@@ -26,7 +63,7 @@ func getBoolValue(config Config, path string) (interface{}, error) {
 }
 
 func checkBoolValue(t *testing.T, value interface{}) {
-	checkEqual(t, value, true)
+	checkEqual(t, value, expectedBoolValue)
 }
 
 func getFloatValue(config Config, path string) (interface{}, error) {
@@ -34,7 +71,7 @@ func getFloatValue(config Config, path string) (interface{}, error) {
 }
 
 func checkFloatValue(t *testing.T, value interface{}) {
-	checkEqual(t, value, 1.23456)
+	checkEqual(t, value, expectedFloatValue)
 }
 
 func getIntValue(config Config, path string) (interface{}, error) {
@@ -42,7 +79,7 @@ func getIntValue(config Config, path string) (interface{}, error) {
 }
 
 func checkIntValue(t *testing.T, value interface{}) {
-	checkEqual(t, value, int64(123456))
+	checkEqual(t, value, expectedIntValue)
 }
 
 func getDurationValue(config Config, path string) (interface{}, error) {
@@ -50,8 +87,7 @@ func getDurationValue(config Config, path string) (interface{}, error) {
 }
 
 func checkDurationValue(t *testing.T, value interface{}) {
-	expectedDuration, _ := time.ParseDuration("2h45m5s150ms")
-	checkEqual(t, value, expectedDuration)
+	checkEqual(t, value, expectedDurationValue)
 }
 
 func getTimeValue(config Config, path string) (interface{}, error) {
@@ -59,67 +95,56 @@ func getTimeValue(config Config, path string) (interface{}, error) {
 }
 
 func checkTimeValue(t *testing.T, value interface{}) {
-	expectedTime, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05+07:00")
-	checkEqual(t, value, expectedTime)
+	checkEqual(t, value, expectedTimeValue)
 }
 
 // Test helpers for array values.
 func getStringValues(config Config, path string) (interface{}, error) {
-	return config.GetStrings(path, " ")
+	return config.GetStrings(path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkStringValues(t *testing.T, value interface{}) {
-	checkEqual(t, value, []string{"value1", "value2", "value3"})
+	checkEqual(t, value, expectedStringValues)
 }
 
 func getBoolValues(config Config, path string) (interface{}, error) {
-	return config.GetBools(path, " ")
+	return config.GetBools(path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkBoolValues(t *testing.T, value interface{}) {
-	checkEqual(t, value, []bool{true, false, true})
+	checkEqual(t, value, expectedBoolValues)
 }
 
 func getFloatValues(config Config, path string) (interface{}, error) {
-	return config.GetFloats(path, " ")
+	return config.GetFloats(path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkFloatValues(t *testing.T, value interface{}) {
-	checkEqual(t, value, []float64{1.23, 4.56, 7.89})
+	checkEqual(t, value, expectedFloatValues)
 }
 
 func getIntValues(config Config, path string) (interface{}, error) {
-	return config.GetInts(path, " ")
+	return config.GetInts(path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkIntValues(t *testing.T, value interface{}) {
-	checkEqual(t, value, []int64{123, 456, 789})
+	checkEqual(t, value, expectedIntValues)
 }
 
 func getDurationValues(config Config, path string) (interface{}, error) {
-	return GetDurations(config, path, " ")
+	return GetDurations(config, path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkDurationValues(t *testing.T, value interface{}) {
-	stringDurations := []string{"1h", "1h15m30s450ms", "1s750ms"}
-	durations := make([]time.Duration, len(stringDurations))
-	for i := range stringDurations {
-		durations[i], _ = time.ParseDuration(stringDurations[i])
-	}
-	checkEqual(t, value, durations)
+	checkEqual(t, value, expectedDurationValues)
 }
 
 func getTimeValues(config Config, path string) (interface{}, error) {
-	return GetTimes(config, path, " ")
+	return GetTimes(config, path, DEFAULT_ARRAY_DELIMITER)
 }
 
 func checkTimeValues(t *testing.T, value interface{}) {
-	stringTimes := []string{"2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z", "1999-12-31T23:59:59+00:00"}
-	times := make([]time.Time, len(stringTimes))
-	for i := range stringTimes {
-		times[i], _ = time.Parse(time.RFC3339, stringTimes[i])
-	}
-	checkEqual(t, value, times)
+	checkEqual(t, value, expectedTimeValues)
 }
 
 type Functors struct {

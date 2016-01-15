@@ -326,3 +326,38 @@ func TestIniGrabValuesPassError(t *testing.T) {
 
 	require.EqualError(t, err, expectedError.Error())
 }
+
+// Parser tests.
+func TestParseIniBool(t *testing.T) {
+	value, err := parseIniBool(fmt.Sprint(expectedBoolValue))
+	require.NoError(t, err, "Cannot parse ini bool")
+	checkBoolValue(t, value)
+
+	_, err = parseIniBool(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseIniFloat(t *testing.T) {
+	value, err := parseIniFloat(fmt.Sprint(expectedFloatValue))
+	require.NoError(t, err, "Cannot parse ini float")
+	checkFloatValue(t, value)
+
+	_, err = parseIniFloat(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseIniInt(t *testing.T) {
+	value, err := parseIniInt(fmt.Sprint(expectedIntValue))
+	require.NoError(t, err, "Cannot parse ini int")
+	checkIntValue(t, value)
+
+	value, err = parseIniInt(fmt.Sprint(float64(expectedIntValue)))
+	require.NoError(t, err, "Cannot parse ini int")
+	checkIntValue(t, value)
+
+	_, err = parseIniInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseIniInt(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}

@@ -1,8 +1,6 @@
 package config
 
 import (
-	"math"
-
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -134,8 +132,7 @@ func (c *yamlConfig) findElement(path string) (interface{}, error) {
 			return nil, ErrorNotFound
 		}
 		var exist bool
-		element, exist = part[pathPart]
-		if !exist {
+		if element, exist = part[pathPart]; !exist {
 			return nil, ErrorNotFound
 		}
 	}
@@ -156,19 +153,7 @@ func parseYamlFloat(data interface{}) (value float64, err error) {
 }
 
 func parseYamlInt(data interface{}) (value int64, err error) {
-	switch dataValue := data.(type) {
-	case int:
-		return int64(dataValue), nil
-	case int64:
-		return int64(dataValue), nil
-	case float64:
-		// Check that value is integer.
-		if math.Abs(math.Trunc(dataValue) - dataValue) < math.Nextafter(0, 1) {
-			return int64(dataValue), nil
-		}
-		return value, ErrorIncorrectValueType
-	}
-	return value, ErrorIncorrectValueType
+	return parseJsonInt(data)
 }
 
 // Grabbing helpers.

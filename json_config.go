@@ -133,8 +133,7 @@ func (c *jsonConfig) findElement(path string) (interface{}, error) {
 			return nil, ErrorNotFound
 		}
 		var exist bool
-		element, exist = part[pathPart]
-		if !exist {
+		if element, exist = part[pathPart]; !exist {
 			return nil, ErrorNotFound
 		}
 	}
@@ -164,13 +163,17 @@ func parseJsonFloat(data interface{}) (value float64, err error) {
 }
 
 func parseJsonInt(data interface{}) (value int64, err error) {
-	floatingValue, converted := data.(float64)
-	if !converted {
+	switch dataValue := data.(type) {
+	case int:
+		return int64(dataValue), nil
+	case int64:
+		return int64(dataValue), nil
+	case float64:
+		// Check that value is integer.
+		if math.Abs(math.Trunc(dataValue) - dataValue) < math.Nextafter(0, 1) {
+			return int64(dataValue), nil
+		}
 		return value, ErrorIncorrectValueType
-	}
-	// Check that value is integer.
-	if math.Abs(math.Trunc(floatingValue) - floatingValue) < math.Nextafter(0, 1) {
-		return int64(floatingValue), nil
 	}
 	return value, ErrorIncorrectValueType
 }

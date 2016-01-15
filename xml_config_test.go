@@ -224,10 +224,13 @@ func TestXmlGetAbsentAttributeValue(t *testing.T) {
 }
 
 func TestXmlGetAbsentConfigPart(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml/>`))
+	config, err := newXmlConfig([]byte(`<xml element="asd"/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	_, err = config.GetConfigPart("/root")
+	require.Error(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetConfigPart("/xml/@element")
 	require.Error(t, err, ErrorNotFound.Error())
 }
 
@@ -323,4 +326,39 @@ func TestXmlGrabValuesPassError(t *testing.T) {
 		})
 
 	require.EqualError(t, err, expectedError.Error())
+}
+
+// Parser tests.
+func TestParseXmlBool(t *testing.T) {
+	value, err := parseXmlBool(fmt.Sprint(expectedBoolValue))
+	require.NoError(t, err, "Cannot parse xml bool")
+	checkBoolValue(t, value)
+
+	_, err = parseXmlBool(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseXmlFloat(t *testing.T) {
+	value, err := parseXmlFloat(fmt.Sprint(expectedFloatValue))
+	require.NoError(t, err, "Cannot parse xml float")
+	checkFloatValue(t, value)
+
+	_, err = parseXmlFloat(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+func TestParseXmlInt(t *testing.T) {
+	value, err := parseXmlInt(fmt.Sprint(expectedIntValue))
+	require.NoError(t, err, "Cannot parse xml int")
+	checkIntValue(t, value)
+
+	value, err = parseXmlInt(fmt.Sprint(float64(expectedIntValue)))
+	require.NoError(t, err, "Cannot parse xml int")
+	checkIntValue(t, value)
+
+	_, err = parseXmlInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+
+	_, err = parseXmlInt(expectedStringValue)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
