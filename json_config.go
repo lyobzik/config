@@ -113,6 +113,9 @@ func (c *jsonConfig) GetInts(path string, delim string) (value []int64, err erro
 
 // Get subconfig.
 func (c *jsonConfig) GetConfigPart(path string) (Config, error) {
+	if len(splitPath(path)) == 0 {
+		return c, nil
+	}
 	element, err := c.findElement(path)
 	if err != nil {
 		return nil, err

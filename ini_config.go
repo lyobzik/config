@@ -110,99 +110,76 @@ func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error
 
 // Get subconfig.
 func (c *iniConfig) GetConfigPart(path string) (Config, error) {
-	pathParts := splitPath(path)
-	if len(pathParts) == 0 {
-		return c, nil
+	section, key, err := c.findElement(path)
+	if err != nil {
+		return nil, err
 	}
-
-	if c.key != nil {
-		if len(pathParts) > 0 {
-			return nil, ErrorIncorrectPath
-		}
-		return &iniConfig{key: c.key}, nil
-	}
-
-	if c.section != nil {
-		if len(pathParts) > 1 {
-			return nil, ErrorIncorrectPath
-		}
-		if len(pathParts) == 0 {
-			return &iniConfig{section: c.section}, nil
-		}
-		key, _ := c.section.GetKey(pathParts[0])
-		if key == nil {
-			return nil, ErrorNotFound
-		}
-		return &iniConfig{key: key}, nil
-	}
-
-	// else c.file != nil
-	if len(pathParts) > 2 {
-		return nil, ErrorIncorrectPath
-	}
-	if len(pathParts) == 0 {
+	if section == nil && key == nil {
 		return &iniConfig{file: c.file}, nil
 	}
-	var section *ini.Section
-	if len(pathParts) == 1 && len(c.file.Sections()) == 1 {
-		section, _ = c.file.GetSection("")
-	} else {
-		section, _ = c.file.GetSection(pathParts[0])
-	}
-	if section == nil {
-		return nil, ErrorNotFound
-	}
-	if len(pathParts) == 1 {
-		return &iniConfig{section: section}, nil
-	}
-	key, _ := section.GetKey(pathParts[len(pathParts) - 1])
-	if key == nil {
-		return nil, ErrorNotFound
-	}
-	return &iniConfig{key: key}, nil
+	return &iniConfig{section: section, key: key}, nil
 }
 
 // Ini helpers.
 func (c *iniConfig) findKey(path string) (*ini.Key, error) {
+	_, key, err := c.findElement(path)
+	if err != nil {
+		return nil, err
+	}
+	if key == nil {
+		return nil, ErrorNotFound
+	}
+	return key, nil
+}
+
+func (c *iniConfig) findElement(path string) (*ini.Section, *ini.Key, error) {
 	pathParts := splitPath(path)
-	if c.key != nil {
-		if len(pathParts) != 0 {
-			return nil, ErrorNotFound
-		}
-		return c.key, nil
+	section, pathParts, err := c.getSection(c.file, pathParts)
+	if err != nil {
+		return nil, nil, err
 	}
+	key, pathParts, err := c.getKey(section, pathParts)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(pathParts) > 0 {
+		return nil, nil, ErrorNotFound
+	}
+	return section, key, nil
+}
 
+func (c *iniConfig) getSection(file *ini.File, path []string) (*ini.Section, []string, error) {
 	if c.section != nil {
-		if len(pathParts) != 1 {
-			return nil, ErrorNotFound
-		}
-		key, _ := c.section.GetKey(pathParts[0])
-		if key == nil {
-			return nil, ErrorNotFound
-		}
-		return key, nil
+		return c.section, path, nil
 	}
-
-	if c.file != nil {
-		if len(pathParts) < 1 || 2 < len(pathParts) {
-			return nil, ErrorNotFound
-		}
+	if file != nil && len(path) > 0{
 		var section *ini.Section
-		if len(pathParts) == 1 && len(c.file.Sections()) == 1 {
-			section, _ = c.file.GetSection("")
-		} else {
-			section, _ = c.file.GetSection(pathParts[0])
+		if len(file.Sections()) == 1 {
+			section, _ = file.GetSection("")
+		} else if len(path) > 0 {
+			section, _ = file.GetSection(path[0])
+			path = path[1:]
 		}
 		if section == nil {
-			return nil, ErrorNotFound
+			return nil, nil, ErrorNotFound
 		}
-		key, _ := section.GetKey(pathParts[len(pathParts) - 1])
-		if key == nil {
-			return nil, ErrorNotFound
-		}
-		return key, nil
+		return section, path, nil
 	}
-	return nil, ErrorNotFound
+	return nil, path, nil
+}
+
+func (c *iniConfig) getKey(section *ini.Section, path []string) (*ini.Key, []string, error) {
+	if c.key != nil {
+		return c.key, path, nil
+	}
+	if section != nil && len(path) > 0 {
+		key, _ := section.GetKey(path[0])
+		if key == nil {
+			return nil, nil, ErrorNotFound
+		}
+		return key, path[1:], nil
+	}
+	return nil, path, nil
 }
 
 // Ini value parsers.

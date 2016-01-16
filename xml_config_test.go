@@ -76,22 +76,6 @@ func TestManyLevelXmlLoadValue(t *testing.T) {
 	value.Check(t)
 }
 
-func TestManyLevelXmlGetConfigPart(t *testing.T) {
-	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
-	require.NoError(t, err, "Cannot parse xml-config")
-
-	configPart, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
-	require.NoError(t, err, "Cannot get config part")
-
-	expectedConfig, err := newXmlConfig([]byte(oneLevelXmlConfig))
-	require.NoError(t, err, "Cannot parse expected json-config")
-
-	expectedConfigPart, err := expectedConfig.GetConfigPart("/xml")
-	require.NoError(t, err, "Cannot get config part")
-
-	require.Equal(t, configPart, expectedConfigPart, "Not equal configs")
-}
-
 func TestXmlGetAttributeValue(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml element="value"/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
@@ -223,17 +207,6 @@ func TestXmlGetAbsentAttributeValue(t *testing.T) {
 	}
 }
 
-func TestXmlGetAbsentConfigPart(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml element="asd"/>`))
-	require.NoError(t, err, "Cannot parse xml-config")
-
-	_, err = config.GetConfigPart("/root")
-	require.Error(t, err, ErrorNotFound.Error())
-
-	_, err = config.GetConfigPart("/xml/@element")
-	require.Error(t, err, ErrorNotFound.Error())
-}
-
 func TestXmlGetValueOfIncorrectType(t *testing.T) {
 	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
@@ -361,4 +334,70 @@ func TestParseXmlInt(t *testing.T) {
 
 	_, err = parseXmlInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+// Test GetConfigPart
+func TestXmlGetConfigPartRootFromRoot(t *testing.T) {
+	rootConfig, err := newXmlConfig([]byte(twoLevelXmlConfig))
+	require.Nil(t, err, "Cannot parse root xml-config")
+
+	configPart, err := rootConfig.GetConfigPart("/")
+	require.Nil(t, err, "Cannot get config part")
+
+	require.Equal(t, rootConfig, configPart, "Not equal configs")
+}
+
+func TestXmlGetConfigPartSectionFromRoot(t *testing.T) {
+	expectedConfig, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse expected xml-config")
+
+	expectedConfigPart, err := expectedConfig.GetConfigPart("/xml")
+	require.NoError(t, err, "Cannot get config part")
+
+	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse root xml-config")
+
+	configPart, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, expectedConfigPart, configPart, "Not equal configs")
+}
+
+func TestXmlGetConfigPartSectionFromSection(t *testing.T) {
+	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse root xml-config")
+
+	configSection, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	configPart, err := configSection.GetConfigPart("/")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configSection, configPart, "Not equal configs")
+}
+
+func TestXmlGetConfigPartWithLongPath(t *testing.T) {
+	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	require.NoError(t, err, "Cannot parse root xml-config")
+
+	configSection, err := rootConfig.GetConfigPart("/xml/root/child/grandchild")
+	require.NoError(t, err, "Cannot get config section")
+
+	_, err = rootConfig.GetConfigPart("/xml/root/child/grandchild/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = configSection.GetConfigPart("/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+
+func TestXmlGetAbsentConfigPart(t *testing.T) {
+	config, err := newXmlConfig([]byte(`<xml element="asd"/>`))
+	require.NoError(t, err, "Cannot parse xml-config")
+
+	_, err = config.GetConfigPart("/root")
+	require.Error(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetConfigPart("/xml/@element")
+	require.Error(t, err, ErrorNotFound.Error())
 }

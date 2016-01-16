@@ -71,19 +71,6 @@ func TestManyLevelJsonLoadValue(t *testing.T) {
 	value.Check(t)
 }
 
-func TestManyLevelJsonGetConfigPart(t *testing.T) {
-	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
-	require.NoError(t, err, "Cannot parse root json-config")
-
-	expectedConfig, err := newJsonConfig([]byte(oneLevelJsonConfig))
-	require.NoError(t, err, "Cannot parse expected json-config")
-
-	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
-	require.NoError(t, err, "Cannot get config part")
-
-	require.Equal(t, configPart, expectedConfig, "Not equal configs")
-}
-
 func TestJsonGetEmptyStrings(t *testing.T) {
 	config, err := newJsonConfig([]byte(`{"stringElements": []}`))
 	require.NoError(t, err, "Cannot parse json-config")
@@ -167,14 +154,6 @@ func TestJsonGetAbsentValue(t *testing.T) {
 		_, err = functors.Getter(config, "/root")
 		require.Error(t, err, ErrorNotFound.Error())
 	}
-}
-
-func TestJsonGetAbsentConfigPart(t *testing.T) {
-	config, err := newJsonConfig([]byte(`{"element": "value"}`))
-	require.NoError(t, err, "Cannot parse json-config")
-
-	_, err = config.GetConfigPart("/root")
-	require.Error(t, err, ErrorNotFound.Error())
 }
 
 func TestJsonGetValueOfIncorrectType(t *testing.T) {
@@ -361,4 +340,66 @@ func TestParseJsonInt(t *testing.T) {
 
 	_, err = parseJsonInt(expectedIntValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+// Test GetConfigPart
+func TestJsonGetConfigPartRootFromRoot(t *testing.T) {
+	rootConfig, err := newJsonConfig([]byte(twoLevelJsonConfig))
+	require.Nil(t, err, "Cannot parse root json-config")
+
+	configPart, err := rootConfig.GetConfigPart("/")
+	require.Nil(t, err, "Cannot get config part")
+
+	require.Equal(t, rootConfig, configPart, "Not equal configs")
+}
+
+func TestJsonGetConfigPartSectionFromRoot(t *testing.T) {
+	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse root json-config")
+
+	expectedConfig, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse expected json-config")
+
+	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configPart, expectedConfig, "Not equal configs")
+}
+
+func TestJsonGetConfigPartSectionFromSection(t *testing.T) {
+	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse root json-config")
+
+	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	configPart, err := configSection.GetConfigPart("/")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configSection, configPart, "Not equal configs")
+}
+
+func TestJsonGetConfigPartWithLongPath(t *testing.T) {
+	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse root json-config")
+
+	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild")
+	require.NoError(t, err, "Cannot get config section")
+
+	_, err = rootConfig.GetConfigPart("/root/child/grandchild/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = configSection.GetConfigPart("/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestJsonGetAbsentConfigPart(t *testing.T) {
+	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	require.NoError(t, err, "Cannot parse json-config")
+
+	_, err = config.GetConfigPart("/third")
+	require.Error(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetConfigPart("/root/child/grandchild/third")
+	require.Error(t, err, ErrorNotFound.Error())
 }

@@ -72,19 +72,6 @@ func TestManyLevelYamlLoadValue(t *testing.T) {
 	value.Check(t)
 }
 
-func TestManyLevelYamlGetConfigPart(t *testing.T) {
-	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
-	require.NoError(t, err, "Cannot parse root yaml-config")
-
-	expectedConfig, err := newYamlConfig([]byte(oneLevelYamlConfig))
-	require.NoError(t, err, "Cannot parse expected yaml-config")
-
-	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
-	require.NoError(t, err, "Cannot get config part")
-
-	require.Equal(t, configPart, expectedConfig, "Not equal configs")
-}
-
 func TestYamlGetEmptyStrings(t *testing.T) {
 	config, err := newYamlConfig([]byte("stringElements: []"))
 	require.NoError(t, err, "Cannot parse yaml-config")
@@ -168,14 +155,6 @@ func TestYamlGetAbsentValue(t *testing.T) {
 		_, err = functors.Getter(config, "/root")
 		require.Error(t, err, ErrorNotFound.Error())
 	}
-}
-
-func TestYamlGetAbsentConfigPart(t *testing.T) {
-	config, err := newYamlConfig([]byte(`element: value`))
-	require.NoError(t, err, "Cannot parse yaml-config")
-
-	_, err = config.GetConfigPart("/root")
-	require.Error(t, err, ErrorNotFound.Error())
 }
 
 func TestYamlGetValueOfIncorrectType(t *testing.T) {
@@ -362,4 +341,66 @@ func TestParseYamlInt(t *testing.T) {
 
 	_, err = parseYamlInt(expectedIntValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+// Test GetConfigPart
+func TestYamlGetConfigPartRootFromRoot(t *testing.T) {
+	rootConfig, err := newYamlConfig([]byte(twoLevelYamlConfig))
+	require.Nil(t, err, "Cannot parse root yaml-config")
+
+	configPart, err := rootConfig.GetConfigPart("/")
+	require.Nil(t, err, "Cannot get config part")
+
+	require.Equal(t, rootConfig, configPart, "Not equal configs")
+}
+
+func TestYamlGetConfigPartSectionFromRoot(t *testing.T) {
+	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse root yaml-config")
+
+	expectedConfig, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse expected yaml-config")
+
+	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configPart, expectedConfig, "Not equal configs")
+}
+
+func TestYamlGetConfigPartSectionFromSection(t *testing.T) {
+	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse root yaml-config")
+
+	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	configPart, err := configSection.GetConfigPart("/")
+	require.NoError(t, err, "Cannot get config part")
+
+	require.Equal(t, configSection, configPart, "Not equal configs")
+}
+
+func TestYamlGetConfigPartWithLongPath(t *testing.T) {
+	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse root yaml-config")
+
+	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild")
+	require.NoError(t, err, "Cannot get config section")
+
+	_, err = rootConfig.GetConfigPart("/root/child/grandchild/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = configSection.GetConfigPart("/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestYamlGetAbsentConfigPart(t *testing.T) {
+	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	_, err = config.GetConfigPart("/third")
+	require.Error(t, err, ErrorNotFound.Error())
+
+	_, err = config.GetConfigPart("/root/child/grandchild/third")
+	require.Error(t, err, ErrorNotFound.Error())
 }

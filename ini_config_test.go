@@ -60,27 +60,6 @@ func TestTwoLevelIniLoadValue(t *testing.T) {
 	value.Check(t)
 }
 
-func TestTwoLevelIniGetConfigPart(t *testing.T) {
-	expectedConfig, err := newIniConfig([]byte(oneLevelIniConfig))
-	require.Nil(t, err, "Cannot parse expected ini-config")
-
-	expectedValue := configData{}
-	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
-	require.Nil(t, err, "Cannot load value from expected ini-config")
-
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
-	require.Nil(t, err, "Cannot parse root ini-config")
-
-	configPart, err := rootConfig.GetConfigPart("/first")
-	require.Nil(t, err, "Cannot get config part")
-
-	value := configData{}
-	err = LoadValueIgnoringErrors(configPart, "/", &value)
-	require.Nil(t, err, "Cannot load value from ini-config")
-
-	require.Equal(t, value, expectedValue, "Not equal configs")
-}
-
 func TestIniGetEmptyStrings(t *testing.T) {
 	config, err := newIniConfig([]byte("element="))
 	require.NoError(t, err, "Cannot parse ini-config")
@@ -360,4 +339,150 @@ func TestParseIniInt(t *testing.T) {
 
 	_, err = parseIniInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
+// Test GetConfigPart
+func TestIniGetConfigPartRootFromRoot(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.Nil(t, err, "Cannot parse root ini-config")
+
+	configPart, err := rootConfig.GetConfigPart("/")
+	require.Nil(t, err, "Cannot get config part")
+
+	require.Equal(t, rootConfig, configPart, "Not equal configs")
+}
+
+func TestIniGetConfigPartSectionFromRoot(t *testing.T) {
+	expectedConfig, err := newIniConfig([]byte(oneLevelIniConfig))
+	require.Nil(t, err, "Cannot parse expected ini-config")
+
+	expectedValue := configData{}
+	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
+	require.Nil(t, err, "Cannot load value from expected ini-config")
+
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.Nil(t, err, "Cannot parse root ini-config")
+
+	configPart, err := rootConfig.GetConfigPart("/first")
+	require.Nil(t, err, "Cannot get config part")
+
+	value := configData{}
+	err = LoadValueIgnoringErrors(configPart, "/", &value)
+	require.Nil(t, err, "Cannot load value from ini-config")
+
+	require.Equal(t, value, expectedValue, "Not equal configs")
+}
+
+func TestIniGetConfigPartKeyFromRoot(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	for element, functors := range elementFunctors {
+		configPart, err := rootConfig.GetConfigPart(joinPath("/first", element))
+		require.NoError(t, err, "Cannot get config part")
+
+		value, err := functors.Getter(configPart, "/")
+		require.NoError(t, err, "Cannot get value from config")
+
+		functors.Checker(t, value)
+	}
+}
+
+func TestIniGetConfigPartSectionFromSection(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	configSection, err := rootConfig.GetConfigPart("/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	configPart, err := rootConfig.GetConfigPart("/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	require.Equal(t, configSection, configPart, "Not equal configs")
+}
+
+func TestIniGetConfigPartKeyFromSection(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	configSection, err := rootConfig.GetConfigPart("/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	for element, functors := range elementFunctors {
+		configPart, err := configSection.GetConfigPart(element)
+		require.NoError(t, err, "Cannot get config part")
+
+		value, err := functors.Getter(configPart, "/")
+		require.NoError(t, err, "Cannot get value from config")
+
+		functors.Checker(t, value)
+	}
+}
+
+func TestIniGetConfigPartKeyFromKey(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	for element, functors := range elementFunctors {
+		configKey, err := rootConfig.GetConfigPart(joinPath("first", element))
+		require.NoError(t, err, "Cannot get config key")
+
+		configPart, err := configKey.GetConfigPart("/")
+		require.NoError(t, err, "Cannot get config part")
+
+		value, err := functors.Getter(configPart, "/")
+		require.NoError(t, err, "Cannot get value from config")
+
+		functors.Checker(t, value)
+	}
+}
+
+func TestIniGetConfigPartWithLongPath(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	configSection, err := rootConfig.GetConfigPart("/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	configKey, err := rootConfig.GetConfigPart("/first/stringElement")
+	require.NoError(t, err, "Cannot get config key ection")
+
+	_, err = rootConfig.GetConfigPart("/first/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = configSection.GetConfigPart("/stringElement/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = configKey.GetConfigPart("/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestIniGetConfigPartAbsentSectionFromTwoLevelRoot(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	_, err = rootConfig.GetConfigPart("/third")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestIniGetConfigPartAbsentKeyFromTwoLevelRoot(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	_, err = rootConfig.GetConfigPart("/first/element")
+	require.EqualError(t, err, ErrorNotFound.Error())
+
+	_, err = rootConfig.GetConfigPart("/third/stringElement")
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestIniGetConfigPartAbsentKeyFromSection(t *testing.T) {
+	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	require.NoError(t, err, "Cannot parse root ini-config")
+
+	configSection, err := rootConfig.GetConfigPart("/first")
+	require.NoError(t, err, "Cannot get config section")
+
+	_, err = configSection.GetConfigPart("element")
+	require.EqualError(t, err, ErrorNotFound.Error())
 }
