@@ -76,7 +76,7 @@ func TestYamlGetEmptyStrings(t *testing.T) {
 	config, err := newYamlConfig([]byte("stringElements: []"))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	value, err := config.GetStrings("/stringElements", " ")
+	value, err := config.GetStrings("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
@@ -90,7 +90,7 @@ func TestYamlGetFloatAsInt(t *testing.T) {
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValue, int64(1))
 
-	intValues, err := config.GetInts("/intElements", " ")
+	intValues, err := config.GetInts("/intElements", DEFAULT_ARRAY_DELIMITER)
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }

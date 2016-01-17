@@ -121,7 +121,7 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 		value, err := c.GetStrings(path, settings.Delim)
 		return reflect.ValueOf(value), err
 	}
-	return reflect.ValueOf(nil), ErrorIncorrectValueToLoadFromConfig
+	return reflect.ValueOf(nil), ErrorUnsupportedTypeToLoadValue
 }
 
 func loadStructValueByFields(c Config, settings LoadSettings, path string,
@@ -148,7 +148,7 @@ func getCustomLoader(c Config, settings LoadSettings, valueType reflect.Type) va
 		}
 	} else if isLoadable(valueType) {
 		return func (data string, value reflect.Value) (reflect.Value, error) {
-			loadableValue, _ := value.Interface().(Loadable)
+			loadableValue, _ := value.Addr().Interface().(Loadable)
 			err := loadableValue.LoadValueFromConfig(data)
 			return value, err
 		}
@@ -158,7 +158,7 @@ func getCustomLoader(c Config, settings LoadSettings, valueType reflect.Type) va
 
 func isLoadable(valueType reflect.Type) bool {
 	loadableType := reflect.TypeOf((*Loadable)(nil)).Elem()
-	return valueType.Implements(loadableType)
+	return reflect.PtrTo(valueType).Implements(loadableType)
 }
 
 func loadSlice(values []string, settings LoadSettings, value reflect.Value,

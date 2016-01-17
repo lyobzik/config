@@ -1,8 +1,13 @@
 package config
 
 import (
+	"bytes"
 	"errors"
+	"reflect"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -38,6 +43,42 @@ func TestCreatedConfigTypes(t *testing.T) {
 	require.IsType(t, (*yamlConfig)(nil), yml, "Incorrect type of created config")
 }
 
+func TestCreateConfigFromReader(t *testing.T) {
+	reader := bytes.NewReader([]byte(oneLevelJsonConfig))
+	_, err := ReadConfigFromReader(reader, JSON)
+	require.NoError(t, err, "Cannot read config")
+}
+
+func TestTimeDefaultLoader(t *testing.T) {
+	loader, exist := DefaultLoaders["time.Time"]
+	require.True(t, exist, "Cannot found loader for time.Time")
+
+	loadedValue, err := loader(expectedTimeValue.Format(time.RFC3339))
+	require.NoError(t, err, "Cannot load time value")
+
+	var value time.Time
+	reflect.ValueOf(&value).Elem().Set(loadedValue)
+	require.Equal(t, expectedTimeValue, value)
+
+	_, err = loader("time value")
+	require.Error(t, err)
+}
+
+func TestDurationDefaultLoader(t *testing.T) {
+	loader, exist := DefaultLoaders["time.Duration"]
+	require.True(t, exist, "Cannot found loader for time.Duration")
+
+	loadedValue, err := loader(expectedDurationValue.String())
+	require.NoError(t, err, "Cannot load duration value")
+
+	var value time.Duration
+	reflect.ValueOf(&value).Elem().Set(loadedValue)
+	require.Equal(t, expectedDurationValue, value)
+
+	_, err = loader("duration value")
+	require.Error(t, err)
+}
+
 // Negative tests.
 func TestEmptyPathToConfig(t *testing.T) {
 	_, err := ReadConfig("")
@@ -45,7 +86,12 @@ func TestEmptyPathToConfig(t *testing.T) {
 }
 
 func TestIncorrectPathToConfig(t *testing.T) {
-	_, err := ReadConfig("/")
+	_, err := ReadConfig("/incorrectConfigPath")
+	require.Error(t, err)
+}
+
+func TestReadExistButIncorrectFile(t *testing.T) {
+	_, err := ReadConfig(".")
 	require.Error(t, err)
 }
 
@@ -81,4 +127,163 @@ func TestLoadEmptyConfig(t *testing.T) {
 	err = LoadValueIgnoringErrors(config, "/", &value)
 	require.NoError(t, err, "Cannot load value from config")
 	require.Equal(t, initValue, value, "Value must be unchanged")
+}
+
+type StructWithUnsignedIntegerField struct {
+	UnsignedElement uint64 `config:"unsignedElement"`
+}
+
+func TestLoadValueWithUnsignedIntegerField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"unsignedElement": 123456}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithUnsignedIntegerField
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unsigned field")
+	checkEqual(t, value.UnsignedElement, uint64(123456))
+}
+
+type StructWithUnsignedIntegerSlice struct {
+	UnsignedElements []uint64 `config:"unsignedElements"`
+}
+
+func TestLoadValueWithUnsignedIntegerSlice(t *testing.T) {
+	config, err := CreateConfigFromString(`{"unsignedElements": [123, 456, 789]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithUnsignedIntegerSlice
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unsigned slice")
+	checkEqual(t, value.UnsignedElements, []uint64{123, 456, 789})
+}
+
+type LoadableStruct struct {
+	IntElement int64
+	FloatElement float64
+}
+
+var (
+	testErrorLoadLoadableValue = errors.New("Cannot load loadable value")
+)
+
+func (s *LoadableStruct) LoadValueFromConfig(data string) (err error) {
+	values := strings.Split(data, " ")
+	if len(values) != 2 {
+		return testErrorLoadLoadableValue
+	}
+	if s.IntElement, err = strconv.ParseInt(values[0], 10, 64); err != nil {
+		return testErrorLoadLoadableValue
+	}
+	if s.FloatElement, err = strconv.ParseFloat(values[1], 64); err != nil {
+		return testErrorLoadLoadableValue
+	}
+	return nil
+}
+
+type StructWithLoadableField struct {
+	Value LoadableStruct
+	Values []LoadableStruct
+}
+
+func TestLoadValueWithLoadableField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Value": "123456 1.23456",
+		"Values": ["123 1.23", "456 4.56", "789 7.89"]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithLoadableField
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with loadable field")
+	checkEqual(t, value.Value, LoadableStruct{IntElement: expectedIntValue,
+		FloatElement: expectedFloatValue})
+	checkEqual(t, value.Values, []LoadableStruct{
+		LoadableStruct{IntElement: expectedIntValues[0], FloatElement: expectedFloatValues[0]},
+		LoadableStruct{IntElement: expectedIntValues[1], FloatElement: expectedFloatValues[1]},
+		LoadableStruct{IntElement: expectedIntValues[2], FloatElement: expectedFloatValues[2]}})
+}
+
+type UnloadableStruct struct {
+	IntElement int64
+	FloatElement float64
+}
+
+type StructWithUnloadableField struct {
+	Value UnloadableStruct
+}
+
+func TestLoadValueWithUnloadableField(t *testing.T) {
+	config, err := CreateConfigFromString(
+		`{"Value": {"IntElement": 123456, "FloatElement": 1.23456}}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithUnloadableField
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unloadable field")
+	checkEqual(t, value.Value, UnloadableStruct{IntElement: expectedIntValue,
+		FloatElement: expectedFloatValue})
+}
+
+func TestLoadValueToIncorrectVariable(t *testing.T) {
+	config, err := CreateConfigFromString("{}", JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value int
+	err = LoadValue(config, "/", value)
+	require.EqualError(t, err, ErrorIncorrectValueToLoadFromConfig.Error())
+}
+
+type StructWithIncorrectFieldType struct {
+	Value *int
+}
+
+func TestLoadValueWithIncorrectFieldType(t *testing.T) {
+	config, err := CreateConfigFromString("{}", JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithIncorrectFieldType
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorUnsupportedTypeToLoadValue.Error())
+}
+
+type StructWithIncorrectSliceElementType struct {
+	Value []StructWithIncorrectFieldType
+}
+
+func TestLoadValueWithIncorrectSliceElementType(t *testing.T) {
+	config, err := CreateConfigFromString("{}", JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithIncorrectSliceElementType
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorUnsupportedTypeToLoadValue.Error())
+}
+
+func TestLoadValueSliceWithError(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Value": "123456 1.23456",
+		"Values": ["123 1.23", "456", "789"]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithLoadableField
+	err = LoadValue(config, "/", &value)
+
+	require.EqualError(t, err, testErrorLoadLoadableValue.Error())
+	checkEqual(t, value.Value, LoadableStruct{IntElement: expectedIntValue,
+		FloatElement: expectedFloatValue})
+}
+
+func TestLoadValueWithLoadableFieldIncorrectType(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Value": 123456, "Values": [123, 456, 789]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithLoadableField
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+func TestLoadValueWithLoadableFieldLoadError(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Value": "123456", "Values": ["123", "4.56", "789"]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithLoadableField
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, testErrorLoadLoadableValue.Error())
 }

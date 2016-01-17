@@ -75,7 +75,7 @@ func TestJsonGetEmptyStrings(t *testing.T) {
 	config, err := newJsonConfig([]byte(`{"stringElements": []}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	value, err := config.GetStrings("/stringElements", " ")
+	value, err := config.GetStrings("/stringElements", DEFAULT_ARRAY_DELIMITER)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
@@ -89,7 +89,7 @@ func TestJsonGetFloatAsInt(t *testing.T) {
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValue, int64(1))
 
-	intValues, err := config.GetInts("/intElements", " ")
+	intValues, err := config.GetInts("/intElements", DEFAULT_ARRAY_DELIMITER)
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }

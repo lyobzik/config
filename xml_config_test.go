@@ -90,7 +90,7 @@ func TestXmlGetEmptyStrings(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	value, err := config.GetStrings("/xml", " ")
+	value, err := config.GetStrings("/xml", DEFAULT_ARRAY_DELIMITER)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
