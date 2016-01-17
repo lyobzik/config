@@ -1,30 +1,30 @@
 package config
 
 import (
-	"path"
 	"errors"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 	"os"
-	"time"
+	"path"
 	"reflect"
+	"time"
 )
 
 const (
 	CONF = "conf"
-	INI = "ini"
+	INI  = "ini"
 	JSON = "json"
-	XML = "xml"
+	XML  = "xml"
 	YAML = "yaml"
-	YML = "yml"
+	YML  = "yml"
 )
 
 var (
-	ErrorNotFound = errors.New("Not found")
-	ErrorIncorrectPath = errors.New("Incorrect path")
-	ErrorUnknownConfigType = errors.New("Unknown config type")
-	ErrorIncorrectValueType = errors.New("Incorrect value type")
-	ErrorUnsupportedTypeToLoadValue = errors.New("Unsupported field type")
+	ErrorNotFound                       = errors.New("Not found")
+	ErrorIncorrectPath                  = errors.New("Incorrect path")
+	ErrorUnknownConfigType              = errors.New("Unknown config type")
+	ErrorIncorrectValueType             = errors.New("Incorrect value type")
+	ErrorUnsupportedTypeToLoadValue     = errors.New("Unsupported field type")
 	ErrorIncorrectValueToLoadFromConfig = errors.New("Inccorect value to load from config")
 )
 
@@ -166,7 +166,7 @@ type StringValueLoader func(string) (reflect.Value, error)
 type LoadSettings struct {
 	Delim        string
 	IgnoreErrors bool
-	Loaders		 map[string]StringValueLoader
+	Loaders      map[string]StringValueLoader
 }
 
 var (
@@ -200,7 +200,7 @@ func ParametrizedLoadValue(c Config, ignoreErrros bool, path string,
 
 	settings := LoadSettings{Delim: DEFAULT_ARRAY_DELIMITER,
 		IgnoreErrors: ignoreErrros,
-		Loaders: DefaultLoaders}
+		Loaders:      DefaultLoaders}
 	return TunedLoadValue(c, settings, path, value)
 }
 

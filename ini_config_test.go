@@ -1,11 +1,11 @@
 package config
 
 import (
-	"testing"
+	"errors"
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/require"
-	"errors"
 )
 
 var (
@@ -270,7 +270,7 @@ func TestIniGrabAbsentValues(t *testing.T) {
 
 	executed := false
 	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
-		func(length int) {executed = true},
+		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
 			return nil

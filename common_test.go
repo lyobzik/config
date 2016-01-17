@@ -9,25 +9,25 @@ import (
 
 var (
 	expectedStringValue = "value"
-	expectedBoolValue = true
-	expectedFloatValue = 1.23456
-	expectedIntValue = int64(123456)
+	expectedBoolValue   = true
+	expectedFloatValue  = 1.23456
+	expectedIntValue    = int64(123456)
 
 	expectedDurationValue = parseExpectedDurations("2h45m5s150ms")[0]
-	expectedTimeValue = parseExpectedTimes("2006-01-02T15:04:05+07:00")[0]
+	expectedTimeValue     = parseExpectedTimes("2006-01-02T15:04:05+07:00")[0]
 
 	expectedStringValues = []string{"value1", "value2", "value3"}
-	expectedBoolValues = []bool{true, false, true}
-	expectedFloatValues = []float64{1.23, 4.56, 7.89}
-	expectedIntValues = []int64{123, 456, 789}
+	expectedBoolValues   = []bool{true, false, true}
+	expectedFloatValues  = []float64{1.23, 4.56, 7.89}
+	expectedIntValues    = []int64{123, 456, 789}
 
 	expectedDurationValues = parseExpectedDurations("1h", "1h15m30s450ms", "1s750ms")
-	expectedTimeValues = parseExpectedTimes("2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z",
+	expectedTimeValues     = parseExpectedTimes("2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z",
 		"1999-12-31T23:59:59+00:00")
 )
 
 // Helpers to get and check values.
-func parseExpectedDurations(values... string) []time.Duration {
+func parseExpectedDurations(values ...string) []time.Duration {
 	result := make([]time.Duration, 0)
 	for _, value := range values {
 		duration, _ := time.ParseDuration(value)
@@ -36,7 +36,7 @@ func parseExpectedDurations(values... string) []time.Duration {
 	return result
 }
 
-func parseExpectedTimes(values... string) []time.Time {
+func parseExpectedTimes(values ...string) []time.Time {
 	result := make([]time.Time, 0)
 	for _, value := range values {
 		time, _ := time.Parse(time.RFC3339, value)
@@ -148,43 +148,43 @@ func checkTimeValues(t *testing.T, value interface{}) {
 }
 
 type Functors struct {
-	Getter func(Config, string) (interface{}, error)
+	Getter  func(Config, string) (interface{}, error)
 	Checker func(*testing.T, interface{})
 }
 
 var (
 	elementFunctors = map[string]Functors{
-		"stringElement": Functors{Getter: getStringValue, Checker: checkStringValue},
-		"boolElement": Functors{Getter: getBoolValue, Checker: checkBoolValue},
-		"floatElement": Functors{Getter: getFloatValue, Checker: checkFloatValue},
-		"intElement": Functors{Getter: getIntValue, Checker: checkIntValue},
-		"stringElements": Functors{Getter: getStringValues, Checker: checkStringValues},
-		"boolElements": Functors{Getter: getBoolValues, Checker: checkBoolValues},
-		"floatElements": Functors{Getter: getFloatValues, Checker: checkFloatValues},
-		"intElements": Functors{Getter: getIntValues, Checker: checkIntValues},
-		"durationElement": Functors{Getter: getDurationValue, Checker: checkDurationValue},
-		"timeElement": Functors{Getter: getTimeValue, Checker: checkTimeValue},
+		"stringElement":    Functors{Getter: getStringValue, Checker: checkStringValue},
+		"boolElement":      Functors{Getter: getBoolValue, Checker: checkBoolValue},
+		"floatElement":     Functors{Getter: getFloatValue, Checker: checkFloatValue},
+		"intElement":       Functors{Getter: getIntValue, Checker: checkIntValue},
+		"stringElements":   Functors{Getter: getStringValues, Checker: checkStringValues},
+		"boolElements":     Functors{Getter: getBoolValues, Checker: checkBoolValues},
+		"floatElements":    Functors{Getter: getFloatValues, Checker: checkFloatValues},
+		"intElements":      Functors{Getter: getIntValues, Checker: checkIntValues},
+		"durationElement":  Functors{Getter: getDurationValue, Checker: checkDurationValue},
+		"timeElement":      Functors{Getter: getTimeValue, Checker: checkTimeValue},
 		"durationElements": Functors{Getter: getDurationValues, Checker: checkDurationValues},
-		"timeElements": Functors{Getter: getTimeValues, Checker: checkTimeValues},
+		"timeElements":     Functors{Getter: getTimeValues, Checker: checkTimeValues},
 	}
 )
 
 // Settings structure used in tests.
 type configData struct {
-	StringElement string `config:"stringElement"`
-	BoolElement bool `config:"boolElement"`
-	FloatElement float64 `config:"floatElement"`
-	IntElement int64 `config:"intElement"`
+	StringElement string  `config:"stringElement"`
+	BoolElement   bool    `config:"boolElement"`
+	FloatElement  float64 `config:"floatElement"`
+	IntElement    int64   `config:"intElement"`
 
-	StringElements []string `config:"stringElements"`
-	BoolElements []bool `config:"boolElements"`
-	FloatElements []float64 `config:"floatElements"`
-	IntElements []int64 `config:"intElements"`
+	StringElements []string  `config:"stringElements"`
+	BoolElements   []bool    `config:"boolElements"`
+	FloatElements  []float64 `config:"floatElements"`
+	IntElements    []int64   `config:"intElements"`
 
-	DurationElement time.Duration `config:"durationElement"`
-	TimeElement time.Time `config:"timeElement"`
+	DurationElement  time.Duration   `config:"durationElement"`
+	TimeElement      time.Time       `config:"timeElement"`
 	DurationElements []time.Duration `config:"durationElements"`
-	TimeElements []time.Time `config:"timeElements"`
+	TimeElements     []time.Time     `config:"timeElements"`
 }
 
 func (data configData) Check(t *testing.T) {

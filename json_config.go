@@ -173,7 +173,7 @@ func parseJsonInt(data interface{}) (value int64, err error) {
 		return int64(dataValue), nil
 	case float64:
 		// Check that value is integer.
-		if math.Abs(math.Trunc(dataValue) - dataValue) < math.Nextafter(0, 1) {
+		if math.Abs(math.Trunc(dataValue)-dataValue) < math.Nextafter(0, 1) {
 			return int64(dataValue), nil
 		}
 		return value, ErrorIncorrectValueType

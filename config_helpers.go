@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	PATH_DELIMITER = "/"
+	PATH_DELIMITER          = "/"
 	DEFAULT_ARRAY_DELIMITER = " "
-	TAG_KEY = "config"
+	TAG_KEY                 = "config"
 )
 
 // Heplers.
@@ -18,7 +18,7 @@ func getConfigCreator(configType string) (configCreator, error) {
 	creators := map[string]configCreator{
 		CONF: newIniConfig, INI: newIniConfig,
 		JSON: newJsonConfig,
-		XML: newXmlConfig,
+		XML:  newXmlConfig,
 		YAML: newYamlConfig, YML: newYamlConfig}
 
 	if creator, exist := creators[configType]; exist {
@@ -37,7 +37,7 @@ func filterPathParts(pathParts []string) []string {
 	return filteredPathParts
 }
 
-func splitPath(path string) ([]string) {
+func splitPath(path string) []string {
 	pathParts := strings.Split(path, PATH_DELIMITER)
 	return filterPathParts(pathParts)
 }
@@ -139,7 +139,7 @@ type valueLoader func(string, reflect.Value) (reflect.Value, error)
 
 func getCustomLoader(c Config, settings LoadSettings, valueType reflect.Type) valueLoader {
 	if loader, exist := settings.Loaders[valueType.String()]; exist {
-		return func (data string, value reflect.Value) (reflect.Value, error) {
+		return func(data string, value reflect.Value) (reflect.Value, error) {
 			loadedValue, err := loader(data)
 			if err == nil {
 				value.Set(loadedValue)
@@ -147,7 +147,7 @@ func getCustomLoader(c Config, settings LoadSettings, valueType reflect.Type) va
 			return value, err
 		}
 	} else if isLoadable(valueType) {
-		return func (data string, value reflect.Value) (reflect.Value, error) {
+		return func(data string, value reflect.Value) (reflect.Value, error) {
 			loadableValue, _ := value.Addr().Interface().(Loadable)
 			err := loadableValue.LoadValueFromConfig(data)
 			return value, err
@@ -169,7 +169,7 @@ func loadSlice(values []string, settings LoadSettings, value reflect.Value,
 	for i, data := range values {
 		_, err = loader(data, outputValues.Index(i))
 		if err != nil {
-			break;
+			break
 		}
 	}
 	return outputValues, err

@@ -158,7 +158,7 @@ func TestLoadValueWithUnsignedIntegerSlice(t *testing.T) {
 }
 
 type LoadableStruct struct {
-	IntElement int64
+	IntElement   int64
 	FloatElement float64
 }
 
@@ -181,7 +181,7 @@ func (s *LoadableStruct) LoadValueFromConfig(data string) (err error) {
 }
 
 type StructWithLoadableField struct {
-	Value LoadableStruct
+	Value  LoadableStruct
 	Values []LoadableStruct
 }
 
@@ -202,7 +202,7 @@ func TestLoadValueWithLoadableField(t *testing.T) {
 }
 
 type UnloadableStruct struct {
-	IntElement int64
+	IntElement   int64
 	FloatElement float64
 }
 

@@ -1,26 +1,26 @@
 package config
 
 import (
-	"encoding/xml"
-	"strings"
 	"bytes"
-	"unicode"
+	"encoding/xml"
 	"io"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 // Simple xml parsing.
 type xmlElement struct {
 	Attributes map[string]string
-	Value string
-	Children map[string][]*xmlElement
+	Value      string
+	Children   map[string][]*xmlElement
 }
 
 func NewXmlElement() *xmlElement {
 	return &xmlElement{
 		Attributes: make(map[string]string),
-		Value: "",
-		Children: make(map[string][]*xmlElement, 0)}
+		Value:      "",
+		Children:   make(map[string][]*xmlElement, 0)}
 }
 
 func (e *xmlElement) SetAttributes(attibutes []xml.Attr) {
@@ -46,8 +46,8 @@ func parseXml(data []byte) (*xmlElement, error) {
 
 	xmlRoot := NewXmlElement()
 	elements := []*xmlElement{xmlRoot}
-	lastElement := func () *xmlElement {
-		return elements[len(elements) - 1]
+	lastElement := func() *xmlElement {
+		return elements[len(elements)-1]
 	}
 
 	token, err := decoder.Token()
@@ -60,7 +60,7 @@ func parseXml(data []byte) (*xmlElement, error) {
 
 			elements = append(elements, newElement)
 		case xml.EndElement:
-			elements = elements[:len(elements) - 1]
+			elements = elements[:len(elements)-1]
 		case xml.CharData:
 			lastElement().SetValue(string(element))
 		}

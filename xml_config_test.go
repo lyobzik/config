@@ -2,8 +2,8 @@ package config
 
 import (
 	"errors"
-	"testing"
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -22,8 +22,8 @@ const (
 )
 
 var (
-	oneLevelXmlConfig = fmt.Sprintf(`<xml>%s</xml>`, xmlConfigPart)
-	twoLevelXmlConfig = fmt.Sprintf(`<xml><first>%[1]s</first><second>%[1]s</second></xml>`, xmlConfigPart)
+	oneLevelXmlConfig  = fmt.Sprintf(`<xml>%s</xml>`, xmlConfigPart)
+	twoLevelXmlConfig  = fmt.Sprintf(`<xml><first>%[1]s</first><second>%[1]s</second></xml>`, xmlConfigPart)
 	manyLevelXmlConfig = fmt.Sprintf(`<xml><root><child1>%[1]s</child1>
 		<child><grandchild><first>%[1]s</first><second>%[1]s</second></grandchild></child></root>
 		<root1><child>%[1]s</child></root1></xml>`, xmlConfigPart)
@@ -265,7 +265,7 @@ func TestXmlGrabAbsentValues(t *testing.T) {
 
 	executed := false
 	err = config.GrabValues("/xml/absentElement", DEFAULT_ARRAY_DELIMITER,
-		func(length int) {executed = true},
+		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
 			return nil
@@ -389,7 +389,6 @@ func TestXmlGetConfigPartWithLongPath(t *testing.T) {
 	_, err = configSection.GetConfigPart("/first/stringElement/element")
 	require.EqualError(t, err, ErrorNotFound.Error())
 }
-
 
 func TestXmlGetAbsentConfigPart(t *testing.T) {
 	config, err := newXmlConfig([]byte(`<xml element="asd"/>`))

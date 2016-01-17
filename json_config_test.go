@@ -2,8 +2,8 @@ package config
 
 import (
 	"errors"
-	"testing"
 	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ var (
 		"durationElement": "2h45m5s150ms",
 		"timeElements": ["2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z", "1999-12-31T23:59:59+00:00"],
 		"durationElements": ["1h", "1h15m30s450ms", "1s750ms"]}`
-	twoLevelJsonConfig = fmt.Sprintf(`{"first": %[1]s, "second": %[1]s}`, oneLevelJsonConfig)
+	twoLevelJsonConfig  = fmt.Sprintf(`{"first": %[1]s, "second": %[1]s}`, oneLevelJsonConfig)
 	manyLevelJsonConfig = fmt.Sprintf(`{"root": {"child1": %[1]s, "child": {"grandchild": %[1]s}},
 		"root1": {"child": %[1]s}}`, twoLevelJsonConfig)
 )
@@ -223,7 +223,7 @@ func TestJsonGrabAbsentValues(t *testing.T) {
 
 	executed := false
 	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
-		func(length int) {executed = true},
+		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
 			return nil
@@ -274,7 +274,6 @@ func TestJsonGrabValuesOfSingleElement(t *testing.T) {
 
 func TestJsonIncorrectInnerData(t *testing.T) {
 	config := &jsonConfig{data: 1}
-
 
 	for element, functors := range elementFunctors {
 		_, err := functors.Getter(config, element)

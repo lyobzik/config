@@ -5,9 +5,9 @@ import (
 )
 
 type iniConfig struct {
-	file *ini.File
+	file    *ini.File
 	section *ini.Section
-	key *ini.Key
+	key     *ini.Key
 }
 
 func newIniConfig(data []byte) (Config, error) {
@@ -152,7 +152,7 @@ func (c *iniConfig) getSection(file *ini.File, path []string) (*ini.Section, []s
 	if c.section != nil {
 		return c.section, path, nil
 	}
-	if file != nil && len(path) > 0{
+	if file != nil && len(path) > 0 {
 		var section *ini.Section
 		if len(file.Sections()) == 1 {
 			section, _ = file.GetSection("")

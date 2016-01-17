@@ -2,9 +2,9 @@ package config
 
 import (
 	"errors"
-	"testing"
-	"strings"
 	"fmt"
+	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -18,11 +18,11 @@ var (
 		"timeElements: [\"2006-01-02T15:04:05+07:00\", \"2015-01-02T01:15:45Z\", \"1999-12-31T23:59:59+00:00\"]\n" +
 		"durationElements: [1h, 1h15m30s450ms, 1s750ms]"
 	twoLevelYamlConfig = fmt.Sprintf("first: %[1]s\nsecond: %[1]s",
-		strings.Replace("\n" + oneLevelYamlConfig, "\n", "\n  ", -1))
-	manyLevelYamlConfig = fmt.Sprintf("root:\n  child1: %[1]s\n  child:\n    grandchild: %[2]s\n" +
+		strings.Replace("\n"+oneLevelYamlConfig, "\n", "\n  ", -1))
+	manyLevelYamlConfig = fmt.Sprintf("root:\n  child1: %[1]s\n  child:\n    grandchild: %[2]s\n"+
 		"root1:\n  child: %[1]s",
-		strings.Replace("\n" + twoLevelYamlConfig, "\n", "\n    ", -1),
-		strings.Replace("\n" + twoLevelYamlConfig, "\n", "\n      ", -1))
+		strings.Replace("\n"+twoLevelYamlConfig, "\n", "\n    ", -1),
+		strings.Replace("\n"+twoLevelYamlConfig, "\n", "\n      ", -1))
 )
 
 func equalYamlTest(t *testing.T, data string, path string, functors Functors) {
@@ -224,7 +224,7 @@ func TestYamlGrabAbsentValues(t *testing.T) {
 
 	executed := false
 	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
-		func(length int) {executed = true},
+		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
 			return nil
@@ -275,7 +275,6 @@ func TestYamlGrabValuesOfSingleElement(t *testing.T) {
 
 func TestYamlIncorrectInnerData(t *testing.T) {
 	config := &yamlConfig{data: 1}
-
 
 	for element, functors := range elementFunctors {
 		_, err := functors.Getter(config, element)
