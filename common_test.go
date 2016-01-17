@@ -28,7 +28,7 @@ var (
 
 // Helpers to get and check values.
 func parseExpectedDurations(values ...string) []time.Duration {
-	result := make([]time.Duration, 0)
+	var result []time.Duration
 	for _, value := range values {
 		duration, _ := time.ParseDuration(value)
 		result = append(result, duration)
@@ -37,7 +37,7 @@ func parseExpectedDurations(values ...string) []time.Duration {
 }
 
 func parseExpectedTimes(values ...string) []time.Time {
-	result := make([]time.Time, 0)
+	var result []time.Time
 	for _, value := range values {
 		time, _ := time.Parse(time.RFC3339, value)
 		result = append(result, time)
@@ -100,7 +100,7 @@ func checkTimeValue(t *testing.T, value interface{}) {
 
 // Test helpers for array values.
 func getStringValues(config Config, path string) (interface{}, error) {
-	return config.GetStrings(path, DEFAULT_ARRAY_DELIMITER)
+	return config.GetStrings(path, DefaultArrayDelimiter)
 }
 
 func checkStringValues(t *testing.T, value interface{}) {
@@ -108,7 +108,7 @@ func checkStringValues(t *testing.T, value interface{}) {
 }
 
 func getBoolValues(config Config, path string) (interface{}, error) {
-	return config.GetBools(path, DEFAULT_ARRAY_DELIMITER)
+	return config.GetBools(path, DefaultArrayDelimiter)
 }
 
 func checkBoolValues(t *testing.T, value interface{}) {
@@ -116,7 +116,7 @@ func checkBoolValues(t *testing.T, value interface{}) {
 }
 
 func getFloatValues(config Config, path string) (interface{}, error) {
-	return config.GetFloats(path, DEFAULT_ARRAY_DELIMITER)
+	return config.GetFloats(path, DefaultArrayDelimiter)
 }
 
 func checkFloatValues(t *testing.T, value interface{}) {
@@ -124,7 +124,7 @@ func checkFloatValues(t *testing.T, value interface{}) {
 }
 
 func getIntValues(config Config, path string) (interface{}, error) {
-	return config.GetInts(path, DEFAULT_ARRAY_DELIMITER)
+	return config.GetInts(path, DefaultArrayDelimiter)
 }
 
 func checkIntValues(t *testing.T, value interface{}) {
@@ -132,7 +132,7 @@ func checkIntValues(t *testing.T, value interface{}) {
 }
 
 func getDurationValues(config Config, path string) (interface{}, error) {
-	return GetDurations(config, path, DEFAULT_ARRAY_DELIMITER)
+	return GetDurations(config, path, DefaultArrayDelimiter)
 }
 
 func checkDurationValues(t *testing.T, value interface{}) {
@@ -140,7 +140,7 @@ func checkDurationValues(t *testing.T, value interface{}) {
 }
 
 func getTimeValues(config Config, path string) (interface{}, error) {
-	return GetTimes(config, path, DEFAULT_ARRAY_DELIMITER)
+	return GetTimes(config, path, DefaultArrayDelimiter)
 }
 
 func checkTimeValues(t *testing.T, value interface{}) {
@@ -154,18 +154,18 @@ type Functors struct {
 
 var (
 	elementFunctors = map[string]Functors{
-		"stringElement":    Functors{Getter: getStringValue, Checker: checkStringValue},
-		"boolElement":      Functors{Getter: getBoolValue, Checker: checkBoolValue},
-		"floatElement":     Functors{Getter: getFloatValue, Checker: checkFloatValue},
-		"intElement":       Functors{Getter: getIntValue, Checker: checkIntValue},
-		"stringElements":   Functors{Getter: getStringValues, Checker: checkStringValues},
-		"boolElements":     Functors{Getter: getBoolValues, Checker: checkBoolValues},
-		"floatElements":    Functors{Getter: getFloatValues, Checker: checkFloatValues},
-		"intElements":      Functors{Getter: getIntValues, Checker: checkIntValues},
-		"durationElement":  Functors{Getter: getDurationValue, Checker: checkDurationValue},
-		"timeElement":      Functors{Getter: getTimeValue, Checker: checkTimeValue},
-		"durationElements": Functors{Getter: getDurationValues, Checker: checkDurationValues},
-		"timeElements":     Functors{Getter: getTimeValues, Checker: checkTimeValues},
+		"stringElement":    {Getter: getStringValue, Checker: checkStringValue},
+		"boolElement":      {Getter: getBoolValue, Checker: checkBoolValue},
+		"floatElement":     {Getter: getFloatValue, Checker: checkFloatValue},
+		"intElement":       {Getter: getIntValue, Checker: checkIntValue},
+		"stringElements":   {Getter: getStringValues, Checker: checkStringValues},
+		"boolElements":     {Getter: getBoolValues, Checker: checkBoolValues},
+		"floatElements":    {Getter: getFloatValues, Checker: checkFloatValues},
+		"intElements":      {Getter: getIntValues, Checker: checkIntValues},
+		"durationElement":  {Getter: getDurationValue, Checker: checkDurationValue},
+		"timeElement":      {Getter: getTimeValue, Checker: checkTimeValue},
+		"durationElements": {Getter: getDurationValues, Checker: checkDurationValues},
+		"timeElements":     {Getter: getTimeValues, Checker: checkTimeValues},
 	}
 )
 

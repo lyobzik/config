@@ -198,7 +198,7 @@ func LoadValueIgnoringErrors(c Config, path string, value interface{}) (err erro
 func ParametrizedLoadValue(c Config, ignoreErrros bool, path string,
 	value interface{}) (err error) {
 
-	settings := LoadSettings{Delim: DEFAULT_ARRAY_DELIMITER,
+	settings := LoadSettings{Delim: DefaultArrayDelimiter,
 		IgnoreErrors: ignoreErrros,
 		Loaders:      DefaultLoaders}
 	return TunedLoadValue(c, settings, path, value)

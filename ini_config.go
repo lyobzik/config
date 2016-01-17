@@ -10,7 +10,7 @@ type iniConfig struct {
 	key     *ini.Key
 }
 
-func newIniConfig(data []byte) (Config, error) {
+func newINIConfig(data []byte) (Config, error) {
 	file, err := ini.Load(data)
 	if err != nil {
 		return nil, err
@@ -21,13 +21,13 @@ func newIniConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *iniConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	return GrabStringValue(c, path, createIniValueGrabber(grabber))
+	return GrabStringValue(c, path, createINIValueGrabber(grabber))
 }
 
 func (c *iniConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	return GrabStringValues(c, path, delim, creator, createIniValueGrabber(grabber))
+	return GrabStringValues(c, path, delim, creator, createINIValueGrabber(grabber))
 }
 
 // Get single value.
@@ -77,7 +77,7 @@ func (c *iniConfig) GetBools(path string, delim string) (value []bool, err error
 		func(cap int) { value = make([]bool, 0, cap) },
 		func(data string) error {
 			var parsed bool
-			if parsed, err = parseIniBool(data); err == nil {
+			if parsed, err = parseINIBool(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -89,7 +89,7 @@ func (c *iniConfig) GetFloats(path string, delim string) (value []float64, err e
 		func(cap int) { value = make([]float64, 0, cap) },
 		func(data string) error {
 			var parsed float64
-			if parsed, err = parseIniFloat(data); err == nil {
+			if parsed, err = parseINIFloat(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -101,7 +101,7 @@ func (c *iniConfig) GetInts(path string, delim string) (value []int64, err error
 		func(cap int) { value = make([]int64, 0, cap) },
 		func(data string) error {
 			var parsed int64
-			if parsed, err = parseIniInt(data); err == nil {
+			if parsed, err = parseINIInt(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -183,19 +183,19 @@ func (c *iniConfig) getKey(section *ini.Section, path []string) (*ini.Key, []str
 }
 
 // Ini value parsers.
-func parseIniBool(data string) (bool, error) {
-	return parseXmlBool(data)
+func parseINIBool(data string) (bool, error) {
+	return parseXMLBool(data)
 }
 
-func parseIniFloat(data string) (float64, error) {
-	return parseXmlFloat(data)
+func parseINIFloat(data string) (float64, error) {
+	return parseXMLFloat(data)
 }
 
-func parseIniInt(data string) (int64, error) {
-	return parseXmlInt(data)
+func parseINIInt(data string) (int64, error) {
+	return parseXMLInt(data)
 }
 
 // Grabbing helpers.
-func createIniValueGrabber(grabber ValueGrabber) StringValueGrabber {
-	return createXmlValueGrabber(grabber)
+func createINIValueGrabber(grabber ValueGrabber) StringValueGrabber {
+	return createXMLValueGrabber(grabber)
 }

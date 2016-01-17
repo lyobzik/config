@@ -8,7 +8,7 @@ type yamlConfig struct {
 	data interface{}
 }
 
-func newYamlConfig(data []byte) (Config, error) {
+func newYAMLConfig(data []byte) (Config, error) {
 	var config yamlConfig
 
 	if err := yaml.Unmarshal(data, &config.data); err != nil {
@@ -29,34 +29,34 @@ func (c *yamlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 func (c *yamlConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	return c.GrabValue(path, createYamlValueGrabber(creator, grabber))
+	return c.GrabValue(path, createYAMLValueGrabber(creator, grabber))
 }
 
 // Get single value.
 func (c *yamlConfig) GetString(path string) (value string, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseYamlString(data)
+		value, err = parseYAMLString(data)
 		return err
 	})
 }
 
 func (c *yamlConfig) GetBool(path string) (value bool, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseYamlBool(data)
+		value, err = parseYAMLBool(data)
 		return err
 	})
 }
 
 func (c *yamlConfig) GetFloat(path string) (value float64, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseYamlFloat(data)
+		value, err = parseYAMLFloat(data)
 		return err
 	})
 }
 
 func (c *yamlConfig) GetInt(path string) (value int64, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseYamlInt(data)
+		value, err = parseYAMLInt(data)
 		return err
 	})
 }
@@ -67,7 +67,7 @@ func (c *yamlConfig) GetStrings(path string, delim string) (value []string, err 
 		func(cap int) { value = make([]string, 0, cap) },
 		func(data interface{}) error {
 			var parsed string
-			if parsed, err = parseYamlString(data); err == nil {
+			if parsed, err = parseYAMLString(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -79,7 +79,7 @@ func (c *yamlConfig) GetBools(path string, delim string) (value []bool, err erro
 		func(cap int) { value = make([]bool, 0, cap) },
 		func(data interface{}) error {
 			var parsed bool
-			if parsed, err = parseYamlBool(data); err == nil {
+			if parsed, err = parseYAMLBool(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -91,7 +91,7 @@ func (c *yamlConfig) GetFloats(path string, delim string) (value []float64, err 
 		func(cap int) { value = make([]float64, 0, cap) },
 		func(data interface{}) error {
 			var parsed float64
-			if parsed, err = parseYamlFloat(data); err == nil {
+			if parsed, err = parseYAMLFloat(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -103,7 +103,7 @@ func (c *yamlConfig) GetInts(path string, delim string) (value []int64, err erro
 		func(cap int) { value = make([]int64, 0, cap) },
 		func(data interface{}) error {
 			var parsed int64
-			if parsed, err = parseYamlInt(data); err == nil {
+			if parsed, err = parseYAMLInt(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -143,23 +143,23 @@ func (c *yamlConfig) findElement(path string) (interface{}, error) {
 }
 
 // Yaml value parsers.
-func parseYamlString(data interface{}) (value string, err error) {
-	return parseJsonString(data)
+func parseYAMLString(data interface{}) (value string, err error) {
+	return parseJSONString(data)
 }
 
-func parseYamlBool(data interface{}) (value bool, err error) {
-	return parseJsonBool(data)
+func parseYAMLBool(data interface{}) (value bool, err error) {
+	return parseJSONBool(data)
 }
 
-func parseYamlFloat(data interface{}) (value float64, err error) {
-	return parseJsonFloat(data)
+func parseYAMLFloat(data interface{}) (value float64, err error) {
+	return parseJSONFloat(data)
 }
 
-func parseYamlInt(data interface{}) (value int64, err error) {
-	return parseJsonInt(data)
+func parseYAMLInt(data interface{}) (value int64, err error) {
+	return parseJSONInt(data)
 }
 
 // Grabbing helpers.
-func createYamlValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
-	return createJsonValueGrabber(creator, grabber)
+func createYAMLValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
+	return createJSONValueGrabber(creator, grabber)
 }

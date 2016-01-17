@@ -6,9 +6,12 @@ import (
 )
 
 const (
-	PATH_DELIMITER          = "/"
-	DEFAULT_ARRAY_DELIMITER = " "
-	TAG_KEY                 = "config"
+	// PathDelimiter default path delimiter.
+	PathDelimiter = "/"
+	// DefaultArrayDelimiter default array delimiter.
+	DefaultArrayDelimiter = " "
+	// TagKey tag name of structure fields.
+	TagKey = "config"
 )
 
 // Heplers.
@@ -16,10 +19,10 @@ type configCreator func([]byte) (Config, error)
 
 func getConfigCreator(configType string) (configCreator, error) {
 	creators := map[string]configCreator{
-		CONF: newIniConfig, INI: newIniConfig,
-		JSON: newJsonConfig,
-		XML:  newXmlConfig,
-		YAML: newYamlConfig, YML: newYamlConfig}
+		CONF: newINIConfig, INI: newINIConfig,
+		JSON: newJSONConfig,
+		XML:  newXMLConfig,
+		YAML: newYAMLConfig, YML: newYAMLConfig}
 
 	if creator, exist := creators[configType]; exist {
 		return creator, nil
@@ -30,7 +33,7 @@ func getConfigCreator(configType string) (configCreator, error) {
 func filterPathParts(pathParts []string) []string {
 	filteredPathParts := make([]string, 0, len(pathParts))
 	for _, pathPart := range pathParts {
-		if len(pathPart) > 0 && pathPart != PATH_DELIMITER {
+		if len(pathPart) > 0 && pathPart != PathDelimiter {
 			filteredPathParts = append(filteredPathParts, pathPart)
 		}
 	}
@@ -38,17 +41,17 @@ func filterPathParts(pathParts []string) []string {
 }
 
 func splitPath(path string) []string {
-	pathParts := strings.Split(path, PATH_DELIMITER)
+	pathParts := strings.Split(path, PathDelimiter)
 	return filterPathParts(pathParts)
 }
 
 func joinPath(pathParts ...string) string {
 	pathParts = filterPathParts(pathParts)
-	path := strings.Join(pathParts, PATH_DELIMITER)
-	if strings.HasPrefix(path, PATH_DELIMITER) {
+	path := strings.Join(pathParts, PathDelimiter)
+	if strings.HasPrefix(path, PathDelimiter) {
 		return path
 	}
-	return PATH_DELIMITER + path
+	return PathDelimiter + path
 }
 
 // Load value implementations.
@@ -127,7 +130,7 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 func loadStructValueByFields(c Config, settings LoadSettings, path string,
 	value reflect.Value) (result reflect.Value, err error) {
 
-	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i += 1 {
+	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i++ {
 		fieldValue := value.Field(i)
 		fieldPath := joinPath(path, getFieldName(value, i))
 		err = loadValue(c, settings, fieldPath, fieldValue)
@@ -177,7 +180,7 @@ func loadSlice(values []string, settings LoadSettings, value reflect.Value,
 
 func getFieldName(value reflect.Value, i int) string {
 	fieldType := value.Type().Field(i)
-	fieldName := fieldType.Tag.Get(TAG_KEY)
+	fieldName := fieldType.Tag.Get(TagKey)
 	if len(fieldName) != 0 {
 		return fieldName
 	}

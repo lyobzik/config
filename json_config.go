@@ -9,7 +9,7 @@ type jsonConfig struct {
 	data interface{}
 }
 
-func newJsonConfig(data []byte) (Config, error) {
+func newJSONConfig(data []byte) (Config, error) {
 	var config jsonConfig
 
 	if err := json.Unmarshal(data, &config.data); err != nil {
@@ -30,34 +30,34 @@ func (c *jsonConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
 func (c *jsonConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	return c.GrabValue(path, createJsonValueGrabber(creator, grabber))
+	return c.GrabValue(path, createJSONValueGrabber(creator, grabber))
 }
 
 // Get single value.
 func (c *jsonConfig) GetString(path string) (value string, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseJsonString(data)
+		value, err = parseJSONString(data)
 		return err
 	})
 }
 
 func (c *jsonConfig) GetBool(path string) (value bool, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseJsonBool(data)
+		value, err = parseJSONBool(data)
 		return err
 	})
 }
 
 func (c *jsonConfig) GetFloat(path string) (value float64, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseJsonFloat(data)
+		value, err = parseJSONFloat(data)
 		return err
 	})
 }
 
 func (c *jsonConfig) GetInt(path string) (value int64, err error) {
 	return value, c.GrabValue(path, func(data interface{}) error {
-		value, err = parseJsonInt(data)
+		value, err = parseJSONInt(data)
 		return err
 	})
 }
@@ -68,7 +68,7 @@ func (c *jsonConfig) GetStrings(path string, delim string) (value []string, err 
 		func(cap int) { value = make([]string, 0, cap) },
 		func(data interface{}) error {
 			var parsed string
-			if parsed, err = parseJsonString(data); err == nil {
+			if parsed, err = parseJSONString(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -80,7 +80,7 @@ func (c *jsonConfig) GetBools(path string, delim string) (value []bool, err erro
 		func(cap int) { value = make([]bool, 0, cap) },
 		func(data interface{}) error {
 			var parsed bool
-			if parsed, err = parseJsonBool(data); err == nil {
+			if parsed, err = parseJSONBool(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -92,7 +92,7 @@ func (c *jsonConfig) GetFloats(path string, delim string) (value []float64, err 
 		func(cap int) { value = make([]float64, 0, cap) },
 		func(data interface{}) error {
 			var parsed float64
-			if parsed, err = parseJsonFloat(data); err == nil {
+			if parsed, err = parseJSONFloat(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -104,7 +104,7 @@ func (c *jsonConfig) GetInts(path string, delim string) (value []int64, err erro
 		func(cap int) { value = make([]int64, 0, cap) },
 		func(data interface{}) error {
 			var parsed int64
-			if parsed, err = parseJsonInt(data); err == nil {
+			if parsed, err = parseJSONInt(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -144,28 +144,28 @@ func (c *jsonConfig) findElement(path string) (interface{}, error) {
 }
 
 // Json value parsers.
-func parseJsonString(data interface{}) (value string, err error) {
+func parseJSONString(data interface{}) (value string, err error) {
 	if value, converted := data.(string); converted {
 		return value, err
 	}
 	return value, ErrorIncorrectValueType
 }
 
-func parseJsonBool(data interface{}) (value bool, err error) {
+func parseJSONBool(data interface{}) (value bool, err error) {
 	if value, converted := data.(bool); converted {
 		return value, err
 	}
 	return value, ErrorIncorrectValueType
 }
 
-func parseJsonFloat(data interface{}) (value float64, err error) {
+func parseJSONFloat(data interface{}) (value float64, err error) {
 	if value, converted := data.(float64); converted {
 		return value, err
 	}
 	return value, ErrorIncorrectValueType
 }
 
-func parseJsonInt(data interface{}) (value int64, err error) {
+func parseJSONInt(data interface{}) (value int64, err error) {
 	switch dataValue := data.(type) {
 	case int:
 		return int64(dataValue), nil
@@ -182,7 +182,7 @@ func parseJsonInt(data interface{}) (value int64, err error) {
 }
 
 // Grabbing helpers.
-func createJsonValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
+func createJSONValueGrabber(creator ValueSliceCreator, grabber ValueGrabber) ValueGrabber {
 	return func(element interface{}) (err error) {
 		values, converted := element.([]interface{})
 		if !converted {

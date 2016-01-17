@@ -44,7 +44,7 @@ func TestCreatedConfigTypes(t *testing.T) {
 }
 
 func TestCreateConfigFromReader(t *testing.T) {
-	reader := bytes.NewReader([]byte(oneLevelJsonConfig))
+	reader := bytes.NewReader([]byte(oneLevelJSONConfig))
 	_, err := ReadConfigFromReader(reader, JSON)
 	require.NoError(t, err, "Cannot read config")
 }
@@ -118,8 +118,8 @@ func TestLoadEmptyConfig(t *testing.T) {
 	config, err := CreateConfigFromString("{}", JSON)
 	require.NoError(t, err, "Cannot load config")
 
-	var initValue int = 5
-	var value int = initValue
+	initValue := 5
+	value := initValue
 	err = LoadValue(config, "/", &value)
 	require.EqualError(t, err, ErrorNotFound.Error())
 	require.Equal(t, initValue, value, "Value must be unchanged")
@@ -163,19 +163,19 @@ type LoadableStruct struct {
 }
 
 var (
-	testErrorLoadLoadableValue = errors.New("Cannot load loadable value")
+	errorForTestLoadLoadableValue = errors.New("Cannot load loadable value")
 )
 
 func (s *LoadableStruct) LoadValueFromConfig(data string) (err error) {
 	values := strings.Split(data, " ")
 	if len(values) != 2 {
-		return testErrorLoadLoadableValue
+		return errorForTestLoadLoadableValue
 	}
 	if s.IntElement, err = strconv.ParseInt(values[0], 10, 64); err != nil {
-		return testErrorLoadLoadableValue
+		return errorForTestLoadLoadableValue
 	}
 	if s.FloatElement, err = strconv.ParseFloat(values[1], 64); err != nil {
-		return testErrorLoadLoadableValue
+		return errorForTestLoadLoadableValue
 	}
 	return nil
 }
@@ -196,9 +196,9 @@ func TestLoadValueWithLoadableField(t *testing.T) {
 	checkEqual(t, value.Value, LoadableStruct{IntElement: expectedIntValue,
 		FloatElement: expectedFloatValue})
 	checkEqual(t, value.Values, []LoadableStruct{
-		LoadableStruct{IntElement: expectedIntValues[0], FloatElement: expectedFloatValues[0]},
-		LoadableStruct{IntElement: expectedIntValues[1], FloatElement: expectedFloatValues[1]},
-		LoadableStruct{IntElement: expectedIntValues[2], FloatElement: expectedFloatValues[2]}})
+		{IntElement: expectedIntValues[0], FloatElement: expectedFloatValues[0]},
+		{IntElement: expectedIntValues[1], FloatElement: expectedFloatValues[1]},
+		{IntElement: expectedIntValues[2], FloatElement: expectedFloatValues[2]}})
 }
 
 type UnloadableStruct struct {
@@ -265,7 +265,7 @@ func TestLoadValueSliceWithError(t *testing.T) {
 	var value StructWithLoadableField
 	err = LoadValue(config, "/", &value)
 
-	require.EqualError(t, err, testErrorLoadLoadableValue.Error())
+	require.EqualError(t, err, errorForTestLoadLoadableValue.Error())
 	checkEqual(t, value.Value, LoadableStruct{IntElement: expectedIntValue,
 		FloatElement: expectedFloatValue})
 }
@@ -285,5 +285,5 @@ func TestLoadValueWithLoadableFieldLoadError(t *testing.T) {
 
 	var value StructWithLoadableField
 	err = LoadValue(config, "/", &value)
-	require.EqualError(t, err, testErrorLoadLoadableValue.Error())
+	require.EqualError(t, err, errorForTestLoadLoadableValue.Error())
 }

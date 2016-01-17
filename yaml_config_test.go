@@ -10,23 +10,23 @@ import (
 )
 
 var (
-	oneLevelYamlConfig = "stringElement: value\nboolElement: true\n" +
+	oneLevelYAMLConfig = "stringElement: value\nboolElement: true\n" +
 		"floatElement: 1.23456\nintElement: 123456\n" +
 		"stringElements: [value1, value2, value3]\nboolElements: [true, false, true]\n" +
 		"floatElements: [1.23, 4.56, 7.89]\nintElements: [123, 456, 789]\n" +
 		"timeElement: 2006-01-02T15:04:05+07:00\ndurationElement: 2h45m5s150ms\n" +
 		"timeElements: [\"2006-01-02T15:04:05+07:00\", \"2015-01-02T01:15:45Z\", \"1999-12-31T23:59:59+00:00\"]\n" +
 		"durationElements: [1h, 1h15m30s450ms, 1s750ms]"
-	twoLevelYamlConfig = fmt.Sprintf("first: %[1]s\nsecond: %[1]s",
-		strings.Replace("\n"+oneLevelYamlConfig, "\n", "\n  ", -1))
-	manyLevelYamlConfig = fmt.Sprintf("root:\n  child1: %[1]s\n  child:\n    grandchild: %[2]s\n"+
+	twoLevelYAMLConfig = fmt.Sprintf("first: %[1]s\nsecond: %[1]s",
+		strings.Replace("\n"+oneLevelYAMLConfig, "\n", "\n  ", -1))
+	manyLevelYAMLConfig = fmt.Sprintf("root:\n  child1: %[1]s\n  child:\n    grandchild: %[2]s\n"+
 		"root1:\n  child: %[1]s",
-		strings.Replace("\n"+twoLevelYamlConfig, "\n", "\n    ", -1),
-		strings.Replace("\n"+twoLevelYamlConfig, "\n", "\n      ", -1))
+		strings.Replace("\n"+twoLevelYAMLConfig, "\n", "\n    ", -1),
+		strings.Replace("\n"+twoLevelYAMLConfig, "\n", "\n      ", -1))
 )
 
-func equalYamlTest(t *testing.T, data string, path string, functors Functors) {
-	config, err := newYamlConfig([]byte(data))
+func equalYAMLTest(t *testing.T, data string, path string, functors Functors) {
+	config, err := newYAMLConfig([]byte(data))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	value, err := functors.Getter(config, path)
@@ -37,32 +37,32 @@ func equalYamlTest(t *testing.T, data string, path string, functors Functors) {
 
 // Tests.
 func TestCreateEmptyYaml(t *testing.T) {
-	_, err := newJsonConfig([]byte("{}"))
+	_, err := newJSONConfig([]byte("{}"))
 	require.NoError(t, err, "Cannot parse empty yaml-config")
 }
 
 func TestOneLevelYaml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalYamlTest(t, oneLevelYamlConfig, element, functors)
+		equalYAMLTest(t, oneLevelYAMLConfig, element, functors)
 	}
 }
 
 func TestTwoLevelYaml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalYamlTest(t, twoLevelYamlConfig, joinPath("first", element), functors)
-		equalYamlTest(t, twoLevelYamlConfig, joinPath("second", element), functors)
+		equalYAMLTest(t, twoLevelYAMLConfig, joinPath("first", element), functors)
+		equalYAMLTest(t, twoLevelYAMLConfig, joinPath("second", element), functors)
 	}
 }
 
 func TestManyLevelYaml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalYamlTest(t, manyLevelYamlConfig, joinPath("/root/child/grandchild/first", element), functors)
-		equalYamlTest(t, manyLevelYamlConfig, joinPath("/root/child/grandchild/second", element), functors)
+		equalYAMLTest(t, manyLevelYAMLConfig, joinPath("/root/child/grandchild/first", element), functors)
+		equalYAMLTest(t, manyLevelYAMLConfig, joinPath("/root/child/grandchild/second", element), functors)
 	}
 }
 
 func TestManyLevelYamlLoadValue(t *testing.T) {
-	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	value := configData{}
@@ -73,36 +73,36 @@ func TestManyLevelYamlLoadValue(t *testing.T) {
 }
 
 func TestYamlGetEmptyStrings(t *testing.T) {
-	config, err := newYamlConfig([]byte("stringElements: []"))
+	config, err := newYAMLConfig([]byte("stringElements: []"))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	value, err := config.GetStrings("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	value, err := config.GetStrings("/stringElements", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
 }
 
 func TestYamlGetFloatAsInt(t *testing.T) {
-	config, err := newYamlConfig([]byte("intElement: 1.0\nintElements: [1.0, 2.0, 3.0]"))
+	config, err := newYAMLConfig([]byte("intElement: 1.0\nintElements: [1.0, 2.0, 3.0]"))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	intValue, err := config.GetInt("/intElement")
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValue, int64(1))
 
-	intValues, err := config.GetInts("/intElements", DEFAULT_ARRAY_DELIMITER)
+	intValues, err := config.GetInts("/intElements", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }
 
 func TestYamlGrabValue(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	var intValue int64
 	var convertingError error
 	err = config.GrabValue("/intElement", func(data interface{}) error {
-		intValue, convertingError = parseYamlInt(data)
+		intValue, convertingError = parseYAMLInt(data)
 		return nil
 	})
 
@@ -112,14 +112,14 @@ func TestYamlGrabValue(t *testing.T) {
 }
 
 func TestYamlGrabValues(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	var intValues []int64
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
-			value, err := parseYamlInt(data)
+			value, err := parseYAMLInt(data)
 			if err != nil {
 				return err
 			}
@@ -133,12 +133,12 @@ func TestYamlGrabValues(t *testing.T) {
 
 // Negative tests.
 func TestIncorrectYamlConfig(t *testing.T) {
-	_, err := newYamlConfig([]byte("{"))
+	_, err := newYAMLConfig([]byte("{"))
 	require.Error(t, err, "Incorrect yaml-config parsed successfully")
 }
 
 func TestYamlGetValueEmptyPath(t *testing.T) {
-	config, err := newYamlConfig([]byte(`element: value`))
+	config, err := newYAMLConfig([]byte(`element: value`))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	for _, functors := range elementFunctors {
@@ -148,7 +148,7 @@ func TestYamlGetValueEmptyPath(t *testing.T) {
 }
 
 func TestYamlGetAbsentValue(t *testing.T) {
-	config, err := newYamlConfig([]byte(`element: value`))
+	config, err := newYAMLConfig([]byte(`element: value`))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	for _, functors := range elementFunctors {
@@ -158,7 +158,7 @@ func TestYamlGetAbsentValue(t *testing.T) {
 }
 
 func TestYamlGetValueOfIncorrectType(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	_, err = config.GetString("/intElement")
@@ -173,39 +173,39 @@ func TestYamlGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetStrings("/intElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetStrings("/intElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetInt("/floatElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/floatElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/floatElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
 func TestYamlGrabAbsentValue(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	executed := false
@@ -219,11 +219,11 @@ func TestYamlGrabAbsentValue(t *testing.T) {
 }
 
 func TestYamlGrabAbsentValues(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	executed := false
-	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/absentElement", DefaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -235,7 +235,7 @@ func TestYamlGrabAbsentValues(t *testing.T) {
 }
 
 func TestYamlGrabValuePassError(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	expectedError := errors.New("TestYamlGrabValuePassError error")
@@ -247,11 +247,11 @@ func TestYamlGrabValuePassError(t *testing.T) {
 }
 
 func TestYamlGrabValuesPassError(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	expectedError := errors.New("TestYamlGrabValuesPassError error")
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError
@@ -261,10 +261,10 @@ func TestYamlGrabValuesPassError(t *testing.T) {
 }
 
 func TestYamlGrabValuesOfSingleElement(t *testing.T) {
-	config, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElement", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return nil
@@ -284,67 +284,67 @@ func TestYamlIncorrectInnerData(t *testing.T) {
 
 // Parser tests.
 func TestParseYamlString(t *testing.T) {
-	value, err := parseYamlString(expectedStringValue)
+	value, err := parseYAMLString(expectedStringValue)
 	require.NoError(t, err, "Cannot parse yaml string")
 	checkStringValue(t, value)
 
-	_, err = parseYamlString(expectedIntValue)
+	_, err = parseYAMLString(expectedIntValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseYamlString(expectedStringValues)
+	_, err = parseYAMLString(expectedStringValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseYamlBool(t *testing.T) {
-	value, err := parseYamlBool(expectedBoolValue)
+	value, err := parseYAMLBool(expectedBoolValue)
 	require.NoError(t, err, "Cannot parse yaml bool")
 	checkBoolValue(t, value)
 
-	_, err = parseYamlBool(expectedStringValue)
+	_, err = parseYAMLBool(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseYamlBool(expectedBoolValues)
+	_, err = parseYAMLBool(expectedBoolValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseYamlFloat(t *testing.T) {
-	value, err := parseYamlFloat(expectedFloatValue)
+	value, err := parseYAMLFloat(expectedFloatValue)
 	require.NoError(t, err, "Cannot parse yaml float")
 	checkFloatValue(t, value)
 
-	_, err = parseYamlFloat(expectedStringValue)
+	_, err = parseYAMLFloat(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseYamlFloat(expectedFloatValues)
+	_, err = parseYAMLFloat(expectedFloatValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseYamlInt(t *testing.T) {
-	value, err := parseYamlInt(expectedIntValue)
+	value, err := parseYAMLInt(expectedIntValue)
 	require.NoError(t, err, "Cannot parse yaml int")
 	checkIntValue(t, value)
 
-	value, err = parseYamlInt(int(expectedIntValue))
+	value, err = parseYAMLInt(int(expectedIntValue))
 	require.NoError(t, err, "Cannot parse yaml int")
 	checkIntValue(t, value)
 
-	value, err = parseYamlInt(float64(expectedIntValue))
+	value, err = parseYAMLInt(float64(expectedIntValue))
 	require.NoError(t, err, "Cannot parse yaml int")
 	checkIntValue(t, value)
 
-	_, err = parseYamlInt(float64(expectedIntValue) + 0.00000001)
+	_, err = parseYAMLInt(float64(expectedIntValue) + 0.00000001)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseYamlInt(expectedStringValue)
+	_, err = parseYAMLInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseYamlInt(expectedIntValues)
+	_, err = parseYAMLInt(expectedIntValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 // Test GetConfigPart
 func TestYamlGetConfigPartRootFromRoot(t *testing.T) {
-	rootConfig, err := newYamlConfig([]byte(twoLevelYamlConfig))
+	rootConfig, err := newYAMLConfig([]byte(twoLevelYAMLConfig))
 	require.Nil(t, err, "Cannot parse root yaml-config")
 
 	configPart, err := rootConfig.GetConfigPart("/")
@@ -354,10 +354,10 @@ func TestYamlGetConfigPartRootFromRoot(t *testing.T) {
 }
 
 func TestYamlGetConfigPartSectionFromRoot(t *testing.T) {
-	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	rootConfig, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse root yaml-config")
 
-	expectedConfig, err := newYamlConfig([]byte(oneLevelYamlConfig))
+	expectedConfig, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse expected yaml-config")
 
 	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
@@ -367,7 +367,7 @@ func TestYamlGetConfigPartSectionFromRoot(t *testing.T) {
 }
 
 func TestYamlGetConfigPartSectionFromSection(t *testing.T) {
-	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	rootConfig, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse root yaml-config")
 
 	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
@@ -380,7 +380,7 @@ func TestYamlGetConfigPartSectionFromSection(t *testing.T) {
 }
 
 func TestYamlGetConfigPartWithLongPath(t *testing.T) {
-	rootConfig, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	rootConfig, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse root yaml-config")
 
 	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild")
@@ -394,7 +394,7 @@ func TestYamlGetConfigPartWithLongPath(t *testing.T) {
 }
 
 func TestYamlGetAbsentConfigPart(t *testing.T) {
-	config, err := newYamlConfig([]byte(manyLevelYamlConfig))
+	config, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	_, err = config.GetConfigPart("/third")

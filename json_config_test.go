@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	oneLevelJsonConfig = `{"stringElement": "value", "boolElement": true,
+	oneLevelJSONConfig = `{"stringElement": "value", "boolElement": true,
 		"floatElement": 1.23456, "intElement": 123456,
 		"stringElements": ["value1", "value2", "value3"],
 		"boolElements": [true, false, true],
@@ -19,13 +19,13 @@ var (
 		"durationElement": "2h45m5s150ms",
 		"timeElements": ["2006-01-02T15:04:05+07:00", "2015-01-02T01:15:45Z", "1999-12-31T23:59:59+00:00"],
 		"durationElements": ["1h", "1h15m30s450ms", "1s750ms"]}`
-	twoLevelJsonConfig  = fmt.Sprintf(`{"first": %[1]s, "second": %[1]s}`, oneLevelJsonConfig)
-	manyLevelJsonConfig = fmt.Sprintf(`{"root": {"child1": %[1]s, "child": {"grandchild": %[1]s}},
-		"root1": {"child": %[1]s}}`, twoLevelJsonConfig)
+	twoLevelJSONConfig  = fmt.Sprintf(`{"first": %[1]s, "second": %[1]s}`, oneLevelJSONConfig)
+	manyLevelJSONConfig = fmt.Sprintf(`{"root": {"child1": %[1]s, "child": {"grandchild": %[1]s}},
+		"root1": {"child": %[1]s}}`, twoLevelJSONConfig)
 )
 
-func equalJsonTest(t *testing.T, data string, path string, functors Functors) {
-	config, err := newJsonConfig([]byte(data))
+func equalJSONTest(t *testing.T, data string, path string, functors Functors) {
+	config, err := newJSONConfig([]byte(data))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	value, err := functors.Getter(config, path)
@@ -36,32 +36,32 @@ func equalJsonTest(t *testing.T, data string, path string, functors Functors) {
 
 // Tests.
 func TestCreateEmptyJson(t *testing.T) {
-	_, err := newJsonConfig([]byte("{}"))
+	_, err := newJSONConfig([]byte("{}"))
 	require.NoError(t, err, "Cannot parse empty json-config")
 }
 
 func TestOneLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalJsonTest(t, oneLevelJsonConfig, element, functors)
+		equalJSONTest(t, oneLevelJSONConfig, element, functors)
 	}
 }
 
 func TestTwoLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalJsonTest(t, twoLevelJsonConfig, joinPath("first", element), functors)
-		equalJsonTest(t, twoLevelJsonConfig, joinPath("second", element), functors)
+		equalJSONTest(t, twoLevelJSONConfig, joinPath("first", element), functors)
+		equalJSONTest(t, twoLevelJSONConfig, joinPath("second", element), functors)
 	}
 }
 
 func TestManyLevelJson(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalJsonTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/first", element), functors)
-		equalJsonTest(t, manyLevelJsonConfig, joinPath("/root/child/grandchild/second", element), functors)
+		equalJSONTest(t, manyLevelJSONConfig, joinPath("/root/child/grandchild/first", element), functors)
+		equalJSONTest(t, manyLevelJSONConfig, joinPath("/root/child/grandchild/second", element), functors)
 	}
 }
 
 func TestManyLevelJsonLoadValue(t *testing.T) {
-	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	config, err := newJSONConfig([]byte(manyLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	value := configData{}
@@ -72,36 +72,36 @@ func TestManyLevelJsonLoadValue(t *testing.T) {
 }
 
 func TestJsonGetEmptyStrings(t *testing.T) {
-	config, err := newJsonConfig([]byte(`{"stringElements": []}`))
+	config, err := newJSONConfig([]byte(`{"stringElements": []}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	value, err := config.GetStrings("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	value, err := config.GetStrings("/stringElements", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
 }
 
 func TestJsonGetFloatAsInt(t *testing.T) {
-	config, err := newJsonConfig([]byte(`{"intElement": 1.0, "intElements": [1.0, 2.0, 3.0]}`))
+	config, err := newJSONConfig([]byte(`{"intElement": 1.0, "intElements": [1.0, 2.0, 3.0]}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	intValue, err := config.GetInt("/intElement")
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValue, int64(1))
 
-	intValues, err := config.GetInts("/intElements", DEFAULT_ARRAY_DELIMITER)
+	intValues, err := config.GetInts("/intElements", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }
 
 func TestJsonGrabValue(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	var intValue int64
 	var convertingError error
 	err = config.GrabValue("/intElement", func(data interface{}) error {
-		intValue, convertingError = parseJsonInt(data)
+		intValue, convertingError = parseJSONInt(data)
 		return nil
 	})
 
@@ -111,14 +111,14 @@ func TestJsonGrabValue(t *testing.T) {
 }
 
 func TestJsonGrabValues(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	var intValues []int64
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
-			value, err := parseJsonInt(data)
+			value, err := parseJSONInt(data)
 			if err != nil {
 				return err
 			}
@@ -132,12 +132,12 @@ func TestJsonGrabValues(t *testing.T) {
 
 // Negative tests.
 func TestIncorrectJsonConfig(t *testing.T) {
-	_, err := newJsonConfig([]byte("{"))
+	_, err := newJSONConfig([]byte("{"))
 	require.Error(t, err, "Incorrect json-config parsed successfully")
 }
 
 func TestJsonGetValueEmptyPath(t *testing.T) {
-	config, err := newJsonConfig([]byte(`{"element": "value"}`))
+	config, err := newJSONConfig([]byte(`{"element": "value"}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	for _, functors := range elementFunctors {
@@ -147,7 +147,7 @@ func TestJsonGetValueEmptyPath(t *testing.T) {
 }
 
 func TestJsonGetAbsentValue(t *testing.T) {
-	config, err := newJsonConfig([]byte(`{"element": "value"}`))
+	config, err := newJSONConfig([]byte(`{"element": "value"}`))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	for _, functors := range elementFunctors {
@@ -157,7 +157,7 @@ func TestJsonGetAbsentValue(t *testing.T) {
 }
 
 func TestJsonGetValueOfIncorrectType(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	_, err = config.GetString("/intElement")
@@ -172,39 +172,39 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetStrings("/intElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetStrings("/intElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetInt("/floatElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/floatElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/floatElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
 func TestJsonGrabAbsentValue(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	executed := false
@@ -218,11 +218,11 @@ func TestJsonGrabAbsentValue(t *testing.T) {
 }
 
 func TestJsonGrabAbsentValues(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	executed := false
-	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/absentElement", DefaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -234,7 +234,7 @@ func TestJsonGrabAbsentValues(t *testing.T) {
 }
 
 func TestJsonGrabValuePassError(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	expectedError := errors.New("TestJsonGrabValuePassError error")
@@ -246,11 +246,11 @@ func TestJsonGrabValuePassError(t *testing.T) {
 }
 
 func TestJsonGrabValuesPassError(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	expectedError := errors.New("TestJsonGrabValuesPassError error")
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError
@@ -260,10 +260,10 @@ func TestJsonGrabValuesPassError(t *testing.T) {
 }
 
 func TestJsonGrabValuesOfSingleElement(t *testing.T) {
-	config, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElement", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return nil
@@ -283,67 +283,67 @@ func TestJsonIncorrectInnerData(t *testing.T) {
 
 // Parser tests.
 func TestParseJsonString(t *testing.T) {
-	value, err := parseJsonString(expectedStringValue)
+	value, err := parseJSONString(expectedStringValue)
 	require.NoError(t, err, "Cannot parse json string")
 	checkStringValue(t, value)
 
-	_, err = parseJsonString(expectedIntValue)
+	_, err = parseJSONString(expectedIntValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseJsonString(expectedStringValues)
+	_, err = parseJSONString(expectedStringValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseJsonBool(t *testing.T) {
-	value, err := parseJsonBool(expectedBoolValue)
+	value, err := parseJSONBool(expectedBoolValue)
 	require.NoError(t, err, "Cannot parse json bool")
 	checkBoolValue(t, value)
 
-	_, err = parseJsonBool(expectedStringValue)
+	_, err = parseJSONBool(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseJsonBool(expectedBoolValues)
+	_, err = parseJSONBool(expectedBoolValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseJsonFloat(t *testing.T) {
-	value, err := parseJsonFloat(expectedFloatValue)
+	value, err := parseJSONFloat(expectedFloatValue)
 	require.NoError(t, err, "Cannot parse json float")
 	checkFloatValue(t, value)
 
-	_, err = parseJsonFloat(expectedStringValue)
+	_, err = parseJSONFloat(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseJsonFloat(expectedFloatValues)
+	_, err = parseJSONFloat(expectedFloatValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseJsonInt(t *testing.T) {
-	value, err := parseJsonInt(expectedIntValue)
+	value, err := parseJSONInt(expectedIntValue)
 	require.NoError(t, err, "Cannot parse json int")
 	checkIntValue(t, value)
 
-	value, err = parseJsonInt(int(expectedIntValue))
+	value, err = parseJSONInt(int(expectedIntValue))
 	require.NoError(t, err, "Cannot parse json int")
 	checkIntValue(t, value)
 
-	value, err = parseJsonInt(float64(expectedIntValue))
+	value, err = parseJSONInt(float64(expectedIntValue))
 	require.NoError(t, err, "Cannot parse json int")
 	checkIntValue(t, value)
 
-	_, err = parseJsonInt(float64(expectedIntValue) + 0.00000001)
+	_, err = parseJSONInt(float64(expectedIntValue) + 0.00000001)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseJsonInt(expectedStringValue)
+	_, err = parseJSONInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseJsonInt(expectedIntValues)
+	_, err = parseJSONInt(expectedIntValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 // Test GetConfigPart
 func TestJsonGetConfigPartRootFromRoot(t *testing.T) {
-	rootConfig, err := newJsonConfig([]byte(twoLevelJsonConfig))
+	rootConfig, err := newJSONConfig([]byte(twoLevelJSONConfig))
 	require.Nil(t, err, "Cannot parse root json-config")
 
 	configPart, err := rootConfig.GetConfigPart("/")
@@ -353,10 +353,10 @@ func TestJsonGetConfigPartRootFromRoot(t *testing.T) {
 }
 
 func TestJsonGetConfigPartSectionFromRoot(t *testing.T) {
-	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	rootConfig, err := newJSONConfig([]byte(manyLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse root json-config")
 
-	expectedConfig, err := newJsonConfig([]byte(oneLevelJsonConfig))
+	expectedConfig, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse expected json-config")
 
 	configPart, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
@@ -366,7 +366,7 @@ func TestJsonGetConfigPartSectionFromRoot(t *testing.T) {
 }
 
 func TestJsonGetConfigPartSectionFromSection(t *testing.T) {
-	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	rootConfig, err := newJSONConfig([]byte(manyLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse root json-config")
 
 	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild/first")
@@ -379,7 +379,7 @@ func TestJsonGetConfigPartSectionFromSection(t *testing.T) {
 }
 
 func TestJsonGetConfigPartWithLongPath(t *testing.T) {
-	rootConfig, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	rootConfig, err := newJSONConfig([]byte(manyLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse root json-config")
 
 	configSection, err := rootConfig.GetConfigPart("/root/child/grandchild")
@@ -393,7 +393,7 @@ func TestJsonGetConfigPartWithLongPath(t *testing.T) {
 }
 
 func TestJsonGetAbsentConfigPart(t *testing.T) {
-	config, err := newJsonConfig([]byte(manyLevelJsonConfig))
+	config, err := newJSONConfig([]byte(manyLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
 	_, err = config.GetConfigPart("/third")

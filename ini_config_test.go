@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	oneLevelIniConfig = "stringElement=value\nboolElement=true\n" +
+	oneLevelINIConfig = "stringElement=value\nboolElement=true\n" +
 		"floatElement=1.23456\nintElement=123456\n" +
 		"stringElements=value1 value2 value3\nboolElements=true false true\n" +
 		"floatElements=1.23 4.56 7.89\nintElements=123 456 789\n" +
@@ -17,11 +17,11 @@ var (
 		"timeElements=2006-01-02T15:04:05+07:00 2015-01-02T01:15:45Z 1999-12-31T23:59:59+00:00\n" +
 		"durationElements=1h 1h15m30s450ms 1s750ms"
 
-	twoLevelIniConfig = fmt.Sprintf("[first]\n%[1]s\n[second]\n%[1]s", oneLevelIniConfig)
+	twoLevelINIConfig = fmt.Sprintf("[first]\n%[1]s\n[second]\n%[1]s", oneLevelINIConfig)
 )
 
-func equalIniTest(t *testing.T, data string, path string, functors Functors) {
-	config, err := newIniConfig([]byte(data))
+func equalINITest(t *testing.T, data string, path string, functors Functors) {
+	config, err := newINIConfig([]byte(data))
 	require.Nil(t, err, "Cannot parse ini-config")
 
 	value, err := functors.Getter(config, path)
@@ -32,25 +32,25 @@ func equalIniTest(t *testing.T, data string, path string, functors Functors) {
 
 // Tests.
 func TestCreateEmptyIni(t *testing.T) {
-	_, err := newIniConfig([]byte(""))
+	_, err := newINIConfig([]byte(""))
 	require.Nil(t, err, "Cannot parse empty ini-config")
 }
 
 func TestOneLevelIni(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalIniTest(t, oneLevelIniConfig, element, functors)
+		equalINITest(t, oneLevelINIConfig, element, functors)
 	}
 }
 
 func TestTwoLevelIni(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalIniTest(t, twoLevelIniConfig, joinPath("first", element), functors)
-		equalIniTest(t, twoLevelIniConfig, joinPath("second", element), functors)
+		equalINITest(t, twoLevelINIConfig, joinPath("first", element), functors)
+		equalINITest(t, twoLevelINIConfig, joinPath("second", element), functors)
 	}
 }
 
 func TestTwoLevelIniLoadValue(t *testing.T) {
-	config, err := newIniConfig([]byte(twoLevelIniConfig))
+	config, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.Nil(t, err, "Cannot parse ini-config")
 
 	value := configData{}
@@ -61,17 +61,17 @@ func TestTwoLevelIniLoadValue(t *testing.T) {
 }
 
 func TestIniGetEmptyStrings(t *testing.T) {
-	config, err := newIniConfig([]byte("element="))
+	config, err := newINIConfig([]byte("element="))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	value, err := config.GetStrings("/element", DEFAULT_ARRAY_DELIMITER)
+	value, err := config.GetStrings("/element", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
 }
 
 func TestIniGrabValue(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	var intValue int64
@@ -82,7 +82,7 @@ func TestIniGrabValue(t *testing.T) {
 		if stringData, isStringData = data.(string); !isStringData {
 			return errors.New("Incorrect data type")
 		}
-		intValue, convertingError = parseIniInt(stringData)
+		intValue, convertingError = parseINIInt(stringData)
 		return nil
 	})
 
@@ -93,19 +93,19 @@ func TestIniGrabValue(t *testing.T) {
 }
 
 func TestIniGrabValues(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
 			if stringData, isStringData = data.(string); !isStringData {
 				return errors.New("Incorrect data type")
 			}
-			value, err := parseIniInt(stringData)
+			value, err := parseINIInt(stringData)
 			if err != nil {
 				return err
 			}
@@ -119,19 +119,19 @@ func TestIniGrabValues(t *testing.T) {
 }
 
 func TestIniGrabValuesOfSingleElement(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/intElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElement", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
 			if stringData, isStringData = data.(string); !isStringData {
 				return errors.New("Incorrect data type")
 			}
-			value, err := parseIniInt(stringData)
+			value, err := parseINIInt(stringData)
 			if err != nil {
 				return err
 			}
@@ -147,12 +147,12 @@ func TestIniGrabValuesOfSingleElement(t *testing.T) {
 
 // Negative tests.
 func TestIncorrectIniConfig(t *testing.T) {
-	_, err := newIniConfig([]byte("{}"))
+	_, err := newINIConfig([]byte("{}"))
 	require.Error(t, err, "Incorrect ini-config parsed successfully")
 }
 
 func TestIniGetValueEmptyPath(t *testing.T) {
-	config, err := newIniConfig([]byte(""))
+	config, err := newINIConfig([]byte(""))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	for _, functors := range elementFunctors {
@@ -162,7 +162,7 @@ func TestIniGetValueEmptyPath(t *testing.T) {
 }
 
 func TestEmptyIniGetAbsentValue(t *testing.T) {
-	config, err := newIniConfig([]byte(""))
+	config, err := newINIConfig([]byte(""))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	for _, functors := range elementFunctors {
@@ -181,7 +181,7 @@ func TestEmptyIniGetAbsentValue(t *testing.T) {
 }
 
 func TestOneLevelIniGetAbsentValue(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	for _, functors := range elementFunctors {
@@ -200,7 +200,7 @@ func TestOneLevelIniGetAbsentValue(t *testing.T) {
 }
 
 func TestTwoLevelIniGetAbsentValue(t *testing.T) {
-	config, err := newIniConfig([]byte(twoLevelIniConfig))
+	config, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	for _, functors := range elementFunctors {
@@ -219,7 +219,7 @@ func TestTwoLevelIniGetAbsentValue(t *testing.T) {
 }
 
 func TestIniGetValueOfIncorrectType(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	_, err = config.GetBool("/stringElement")
@@ -231,27 +231,27 @@ func TestIniGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
 func TestIniGrabAbsentValue(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	executed := false
@@ -265,11 +265,11 @@ func TestIniGrabAbsentValue(t *testing.T) {
 }
 
 func TestIniGrabAbsentValues(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	executed := false
-	err = config.GrabValues("/absentElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/absentElement", DefaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -281,7 +281,7 @@ func TestIniGrabAbsentValues(t *testing.T) {
 }
 
 func TestIniGrabValuePassError(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	expectedError := errors.New("TestIniGrabValuePassError error")
@@ -293,11 +293,11 @@ func TestIniGrabValuePassError(t *testing.T) {
 }
 
 func TestIniGrabValuesPassError(t *testing.T) {
-	config, err := newIniConfig([]byte(oneLevelIniConfig))
+	config, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	expectedError := errors.New("TestIniGrabValuesPassError error")
-	err = config.GrabValues("/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError
@@ -308,42 +308,42 @@ func TestIniGrabValuesPassError(t *testing.T) {
 
 // Parser tests.
 func TestParseIniBool(t *testing.T) {
-	value, err := parseIniBool(fmt.Sprint(expectedBoolValue))
+	value, err := parseINIBool(fmt.Sprint(expectedBoolValue))
 	require.NoError(t, err, "Cannot parse ini bool")
 	checkBoolValue(t, value)
 
-	_, err = parseIniBool(expectedStringValue)
+	_, err = parseINIBool(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseIniFloat(t *testing.T) {
-	value, err := parseIniFloat(fmt.Sprint(expectedFloatValue))
+	value, err := parseINIFloat(fmt.Sprint(expectedFloatValue))
 	require.NoError(t, err, "Cannot parse ini float")
 	checkFloatValue(t, value)
 
-	_, err = parseIniFloat(expectedStringValue)
+	_, err = parseINIFloat(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseIniInt(t *testing.T) {
-	value, err := parseIniInt(fmt.Sprint(expectedIntValue))
+	value, err := parseINIInt(fmt.Sprint(expectedIntValue))
 	require.NoError(t, err, "Cannot parse ini int")
 	checkIntValue(t, value)
 
-	value, err = parseIniInt(fmt.Sprint(float64(expectedIntValue)))
+	value, err = parseINIInt(fmt.Sprint(float64(expectedIntValue)))
 	require.NoError(t, err, "Cannot parse ini int")
 	checkIntValue(t, value)
 
-	_, err = parseIniInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
+	_, err = parseINIInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseIniInt(expectedStringValue)
+	_, err = parseINIInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 // Test GetConfigPart
 func TestIniGetConfigPartRootFromRoot(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.Nil(t, err, "Cannot parse root ini-config")
 
 	configPart, err := rootConfig.GetConfigPart("/")
@@ -353,14 +353,14 @@ func TestIniGetConfigPartRootFromRoot(t *testing.T) {
 }
 
 func TestIniGetConfigPartSectionFromRoot(t *testing.T) {
-	expectedConfig, err := newIniConfig([]byte(oneLevelIniConfig))
+	expectedConfig, err := newINIConfig([]byte(oneLevelINIConfig))
 	require.Nil(t, err, "Cannot parse expected ini-config")
 
 	expectedValue := configData{}
 	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
 	require.Nil(t, err, "Cannot load value from expected ini-config")
 
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.Nil(t, err, "Cannot parse root ini-config")
 
 	configPart, err := rootConfig.GetConfigPart("/first")
@@ -374,7 +374,7 @@ func TestIniGetConfigPartSectionFromRoot(t *testing.T) {
 }
 
 func TestIniGetConfigPartKeyFromRoot(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	for element, functors := range elementFunctors {
@@ -389,7 +389,7 @@ func TestIniGetConfigPartKeyFromRoot(t *testing.T) {
 }
 
 func TestIniGetConfigPartSectionFromSection(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	configSection, err := rootConfig.GetConfigPart("/first")
@@ -402,7 +402,7 @@ func TestIniGetConfigPartSectionFromSection(t *testing.T) {
 }
 
 func TestIniGetConfigPartKeyFromSection(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	configSection, err := rootConfig.GetConfigPart("/first")
@@ -420,7 +420,7 @@ func TestIniGetConfigPartKeyFromSection(t *testing.T) {
 }
 
 func TestIniGetConfigPartKeyFromKey(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	for element, functors := range elementFunctors {
@@ -438,7 +438,7 @@ func TestIniGetConfigPartKeyFromKey(t *testing.T) {
 }
 
 func TestIniGetConfigPartWithLongPath(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	configSection, err := rootConfig.GetConfigPart("/first")
@@ -458,7 +458,7 @@ func TestIniGetConfigPartWithLongPath(t *testing.T) {
 }
 
 func TestIniGetConfigPartAbsentSectionFromTwoLevelRoot(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	_, err = rootConfig.GetConfigPart("/third")
@@ -466,7 +466,7 @@ func TestIniGetConfigPartAbsentSectionFromTwoLevelRoot(t *testing.T) {
 }
 
 func TestIniGetConfigPartAbsentKeyFromTwoLevelRoot(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	_, err = rootConfig.GetConfigPart("/first/element")
@@ -477,7 +477,7 @@ func TestIniGetConfigPartAbsentKeyFromTwoLevelRoot(t *testing.T) {
 }
 
 func TestIniGetConfigPartAbsentKeyFromSection(t *testing.T) {
-	rootConfig, err := newIniConfig([]byte(twoLevelIniConfig))
+	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
 	require.NoError(t, err, "Cannot parse root ini-config")
 
 	configSection, err := rootConfig.GetConfigPart("/first")

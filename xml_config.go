@@ -16,7 +16,7 @@ type xmlElement struct {
 	Children   map[string][]*xmlElement
 }
 
-func NewXmlElement() *xmlElement {
+func newXMLElement() *xmlElement {
 	return &xmlElement{
 		Attributes: make(map[string]string),
 		Value:      "",
@@ -40,11 +40,11 @@ func (e *xmlElement) SetValue(value string) {
 	}
 }
 
-func parseXml(data []byte) (*xmlElement, error) {
+func parseXML(data []byte) (*xmlElement, error) {
 	reader := bytes.NewReader(data)
 	decoder := xml.NewDecoder(reader)
 
-	xmlRoot := NewXmlElement()
+	xmlRoot := newXMLElement()
 	elements := []*xmlElement{xmlRoot}
 	lastElement := func() *xmlElement {
 		return elements[len(elements)-1]
@@ -54,7 +54,7 @@ func parseXml(data []byte) (*xmlElement, error) {
 	for ; err == nil; token, err = decoder.Token() {
 		switch element := token.(type) {
 		case xml.StartElement:
-			newElement := NewXmlElement()
+			newElement := newXMLElement()
 			newElement.SetAttributes(element.Attr)
 			lastElement().AddChild(element.Name.Local, newElement)
 
@@ -78,8 +78,8 @@ type xmlConfig struct {
 	data *xmlElement
 }
 
-func newXmlConfig(data []byte) (Config, error) {
-	xmlRoot, err := parseXml(data)
+func newXMLConfig(data []byte) (Config, error) {
+	xmlRoot, err := parseXML(data)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +88,13 @@ func newXmlConfig(data []byte) (Config, error) {
 
 // Grabbers.
 func (c *xmlConfig) GrabValue(path string, grabber ValueGrabber) (err error) {
-	return GrabStringValue(c, path, createXmlValueGrabber(grabber))
+	return GrabStringValue(c, path, createXMLValueGrabber(grabber))
 }
 
 func (c *xmlConfig) GrabValues(path string, delim string,
 	creator ValueSliceCreator, grabber ValueGrabber) (err error) {
 
-	return GrabStringValues(c, path, delim, creator, createXmlValueGrabber(grabber))
+	return GrabStringValues(c, path, delim, creator, createXMLValueGrabber(grabber))
 }
 
 // Get single value.
@@ -111,21 +111,21 @@ func (c *xmlConfig) GetString(path string) (value string, err error) {
 
 func (c *xmlConfig) GetBool(path string) (value bool, err error) {
 	return value, GrabStringValue(c, path, func(data string) error {
-		value, err = parseXmlBool(data)
+		value, err = parseXMLBool(data)
 		return err
 	})
 }
 
 func (c *xmlConfig) GetFloat(path string) (value float64, err error) {
 	return value, GrabStringValue(c, path, func(data string) error {
-		value, err = parseXmlFloat(data)
+		value, err = parseXMLFloat(data)
 		return err
 	})
 }
 
 func (c *xmlConfig) GetInt(path string) (value int64, err error) {
 	return value, GrabStringValue(c, path, func(data string) error {
-		value, err = parseXmlInt(data)
+		value, err = parseXMLInt(data)
 		return err
 	})
 }
@@ -147,7 +147,7 @@ func (c *xmlConfig) GetBools(path string, delim string) (value []bool, err error
 		func(cap int) { value = make([]bool, 0, cap) },
 		func(data string) error {
 			var parsed bool
-			if parsed, err = parseXmlBool(data); err == nil {
+			if parsed, err = parseXMLBool(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -159,7 +159,7 @@ func (c *xmlConfig) GetFloats(path string, delim string) (value []float64, err e
 		func(cap int) { value = make([]float64, 0, cap) },
 		func(data string) error {
 			var parsed float64
-			if parsed, err = parseXmlFloat(data); err == nil {
+			if parsed, err = parseXMLFloat(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -171,7 +171,7 @@ func (c *xmlConfig) GetInts(path string, delim string) (value []int64, err error
 		func(cap int) { value = make([]int64, 0, cap) },
 		func(data string) error {
 			var parsed int64
-			if parsed, err = parseXmlInt(data); err == nil {
+			if parsed, err = parseXMLInt(data); err == nil {
 				value = append(value, parsed)
 			}
 			return err
@@ -217,7 +217,7 @@ func (c *xmlConfig) findElement(path string) (*xmlElement, string, error) {
 }
 
 // Xml value parsers.
-func parseXmlBool(data string) (value bool, err error) {
+func parseXMLBool(data string) (value bool, err error) {
 	value, err = strconv.ParseBool(data)
 	if err != nil {
 		return false, ErrorIncorrectValueType
@@ -225,7 +225,7 @@ func parseXmlBool(data string) (value bool, err error) {
 	return value, nil
 }
 
-func parseXmlFloat(data string) (value float64, err error) {
+func parseXMLFloat(data string) (value float64, err error) {
 	value, err = strconv.ParseFloat(data, 64)
 	if err != nil {
 		return 0.0, ErrorIncorrectValueType
@@ -233,7 +233,7 @@ func parseXmlFloat(data string) (value float64, err error) {
 	return value, nil
 }
 
-func parseXmlInt(data string) (value int64, err error) {
+func parseXMLInt(data string) (value int64, err error) {
 	value, err = strconv.ParseInt(data, 10, 64)
 	if err != nil {
 		return 0, ErrorIncorrectValueType
@@ -242,7 +242,7 @@ func parseXmlInt(data string) (value int64, err error) {
 }
 
 // Grabbing helpers.
-func createXmlValueGrabber(grabber ValueGrabber) StringValueGrabber {
+func createXMLValueGrabber(grabber ValueGrabber) StringValueGrabber {
 	return func(data string) error {
 		return grabber(data)
 	}

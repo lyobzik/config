@@ -22,15 +22,15 @@ const (
 )
 
 var (
-	oneLevelXmlConfig  = fmt.Sprintf(`<xml>%s</xml>`, xmlConfigPart)
-	twoLevelXmlConfig  = fmt.Sprintf(`<xml><first>%[1]s</first><second>%[1]s</second></xml>`, xmlConfigPart)
-	manyLevelXmlConfig = fmt.Sprintf(`<xml><root><child1>%[1]s</child1>
+	oneLevelXMLConfig  = fmt.Sprintf(`<xml>%s</xml>`, xmlConfigPart)
+	twoLevelXMLConfig  = fmt.Sprintf(`<xml><first>%[1]s</first><second>%[1]s</second></xml>`, xmlConfigPart)
+	manyLevelXMLConfig = fmt.Sprintf(`<xml><root><child1>%[1]s</child1>
 		<child><grandchild><first>%[1]s</first><second>%[1]s</second></grandchild></child></root>
 		<root1><child>%[1]s</child></root1></xml>`, xmlConfigPart)
 )
 
-func equalXmlTest(t *testing.T, data string, path string, functors Functors) {
-	config, err := newXmlConfig([]byte(data))
+func equalXMLTest(t *testing.T, data string, path string, functors Functors) {
+	config, err := newXMLConfig([]byte(data))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	value, err := functors.Getter(config, path)
@@ -41,32 +41,32 @@ func equalXmlTest(t *testing.T, data string, path string, functors Functors) {
 
 // Tests.
 func TestCreateEmptyXml(t *testing.T) {
-	_, err := newXmlConfig([]byte("<root/>"))
+	_, err := newXMLConfig([]byte("<root/>"))
 	require.NoError(t, err, "Cannot parse empty xml-config")
 }
 
 func TestOneLevelXml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalXmlTest(t, oneLevelXmlConfig, joinPath("/xml", element), functors)
+		equalXMLTest(t, oneLevelXMLConfig, joinPath("/xml", element), functors)
 	}
 }
 
 func TestTwoLevelXml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalXmlTest(t, twoLevelXmlConfig, joinPath("/xml/first", element), functors)
-		equalXmlTest(t, twoLevelXmlConfig, joinPath("/xml/second", element), functors)
+		equalXMLTest(t, twoLevelXMLConfig, joinPath("/xml/first", element), functors)
+		equalXMLTest(t, twoLevelXMLConfig, joinPath("/xml/second", element), functors)
 	}
 }
 
 func TestManyLevelXml(t *testing.T) {
 	for element, functors := range elementFunctors {
-		equalXmlTest(t, manyLevelXmlConfig, joinPath("/xml/root/child/grandchild/first", element), functors)
-		equalXmlTest(t, manyLevelXmlConfig, joinPath("/xml/root/child/grandchild/second", element), functors)
+		equalXMLTest(t, manyLevelXMLConfig, joinPath("/xml/root/child/grandchild/first", element), functors)
+		equalXMLTest(t, manyLevelXMLConfig, joinPath("/xml/root/child/grandchild/second", element), functors)
 	}
 }
 
 func TestManyLevelXmlLoadValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	config, err := newXMLConfig([]byte(manyLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	value := configData{}
@@ -77,7 +77,7 @@ func TestManyLevelXmlLoadValue(t *testing.T) {
 }
 
 func TestXmlGetAttributeValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml element="value"/>`))
+	config, err := newXMLConfig([]byte(`<xml element="value"/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	value, err := config.GetString("/xml/@element")
@@ -87,17 +87,17 @@ func TestXmlGetAttributeValue(t *testing.T) {
 }
 
 func TestXmlGetEmptyStrings(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml/>`))
+	config, err := newXMLConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	value, err := config.GetStrings("/xml", DEFAULT_ARRAY_DELIMITER)
+	value, err := config.GetStrings("/xml", DefaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
 }
 
 func TestXmlGrabValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	var intValue int64
@@ -108,7 +108,7 @@ func TestXmlGrabValue(t *testing.T) {
 		if stringData, isStringData = data.(string); !isStringData {
 			return errors.New("Incorrect data type")
 		}
-		intValue, convertingError = parseXmlInt(stringData)
+		intValue, convertingError = parseXMLInt(stringData)
 		return nil
 	})
 
@@ -119,19 +119,19 @@ func TestXmlGrabValue(t *testing.T) {
 }
 
 func TestXmlGrabValues(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/xml/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/xml/intElements", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
 			if stringData, isStringData = data.(string); !isStringData {
 				return errors.New("Incorrect data type")
 			}
-			value, err := parseXmlInt(stringData)
+			value, err := parseXMLInt(stringData)
 			if err != nil {
 				return err
 			}
@@ -145,19 +145,19 @@ func TestXmlGrabValues(t *testing.T) {
 }
 
 func TestXmlGrabValuesOfSingleElement(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/xml/intElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/xml/intElement", DefaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
 			if stringData, isStringData = data.(string); !isStringData {
 				return errors.New("Incorrect data type")
 			}
-			value, err := parseXmlInt(stringData)
+			value, err := parseXMLInt(stringData)
 			if err != nil {
 				return err
 			}
@@ -173,12 +173,12 @@ func TestXmlGrabValuesOfSingleElement(t *testing.T) {
 
 // Negative tests.
 func TestIncorrectXmlConfig(t *testing.T) {
-	_, err := newXmlConfig([]byte("<root"))
+	_, err := newXMLConfig([]byte("<root"))
 	require.Error(t, err, "Incorrect xml-config parsed successfully")
 }
 
 func TestXmlGetValueEmptyPath(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml/>`))
+	config, err := newXMLConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	for _, functors := range elementFunctors {
@@ -188,7 +188,7 @@ func TestXmlGetValueEmptyPath(t *testing.T) {
 }
 
 func TestXmlGetAbsentValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml/>`))
+	config, err := newXMLConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	for _, functors := range elementFunctors {
@@ -198,7 +198,7 @@ func TestXmlGetAbsentValue(t *testing.T) {
 }
 
 func TestXmlGetAbsentAttributeValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml/>`))
+	config, err := newXMLConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	for _, functors := range elementFunctors {
@@ -208,7 +208,7 @@ func TestXmlGetAbsentAttributeValue(t *testing.T) {
 }
 
 func TestXmlGetValueOfIncorrectType(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	_, err = config.GetBool("/xml/stringElement")
@@ -220,33 +220,33 @@ func TestXmlGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/xml/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/xml/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/xml/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElement", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/xml/stringElement", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetBools("/xml/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/xml/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetFloats("/xml/stringElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetInt("/xml/floatElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/floatElements", DEFAULT_ARRAY_DELIMITER)
+	_, err = config.GetInts("/xml/floatElements", DefaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
 func TestXmlGrabAbsentValue(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	executed := false
@@ -260,11 +260,11 @@ func TestXmlGrabAbsentValue(t *testing.T) {
 }
 
 func TestXmlGrabAbsentValues(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	executed := false
-	err = config.GrabValues("/xml/absentElement", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/xml/absentElement", DefaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -276,7 +276,7 @@ func TestXmlGrabAbsentValues(t *testing.T) {
 }
 
 func TestXmlGrabValuePassError(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	expectedError := errors.New("TestXmlGrabValuePassError error")
@@ -288,11 +288,11 @@ func TestXmlGrabValuePassError(t *testing.T) {
 }
 
 func TestXmlGrabValuesPassError(t *testing.T) {
-	config, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	config, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	expectedError := errors.New("TestXmlGrabValuesPassError error")
-	err = config.GrabValues("/xml/intElements", DEFAULT_ARRAY_DELIMITER,
+	err = config.GrabValues("/xml/intElements", DefaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError
@@ -303,42 +303,42 @@ func TestXmlGrabValuesPassError(t *testing.T) {
 
 // Parser tests.
 func TestParseXmlBool(t *testing.T) {
-	value, err := parseXmlBool(fmt.Sprint(expectedBoolValue))
+	value, err := parseXMLBool(fmt.Sprint(expectedBoolValue))
 	require.NoError(t, err, "Cannot parse xml bool")
 	checkBoolValue(t, value)
 
-	_, err = parseXmlBool(expectedStringValue)
+	_, err = parseXMLBool(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseXmlFloat(t *testing.T) {
-	value, err := parseXmlFloat(fmt.Sprint(expectedFloatValue))
+	value, err := parseXMLFloat(fmt.Sprint(expectedFloatValue))
 	require.NoError(t, err, "Cannot parse xml float")
 	checkFloatValue(t, value)
 
-	_, err = parseXmlFloat(expectedStringValue)
+	_, err = parseXMLFloat(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 func TestParseXmlInt(t *testing.T) {
-	value, err := parseXmlInt(fmt.Sprint(expectedIntValue))
+	value, err := parseXMLInt(fmt.Sprint(expectedIntValue))
 	require.NoError(t, err, "Cannot parse xml int")
 	checkIntValue(t, value)
 
-	value, err = parseXmlInt(fmt.Sprint(float64(expectedIntValue)))
+	value, err = parseXMLInt(fmt.Sprint(float64(expectedIntValue)))
 	require.NoError(t, err, "Cannot parse xml int")
 	checkIntValue(t, value)
 
-	_, err = parseXmlInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
+	_, err = parseXMLInt(fmt.Sprint(float64(expectedIntValue) + 0.00000001))
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 
-	_, err = parseXmlInt(expectedStringValue)
+	_, err = parseXMLInt(expectedStringValue)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 // Test GetConfigPart
 func TestXmlGetConfigPartRootFromRoot(t *testing.T) {
-	rootConfig, err := newXmlConfig([]byte(twoLevelXmlConfig))
+	rootConfig, err := newXMLConfig([]byte(twoLevelXMLConfig))
 	require.Nil(t, err, "Cannot parse root xml-config")
 
 	configPart, err := rootConfig.GetConfigPart("/")
@@ -348,13 +348,13 @@ func TestXmlGetConfigPartRootFromRoot(t *testing.T) {
 }
 
 func TestXmlGetConfigPartSectionFromRoot(t *testing.T) {
-	expectedConfig, err := newXmlConfig([]byte(oneLevelXmlConfig))
+	expectedConfig, err := newXMLConfig([]byte(oneLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse expected xml-config")
 
 	expectedConfigPart, err := expectedConfig.GetConfigPart("/xml")
 	require.NoError(t, err, "Cannot get config part")
 
-	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	rootConfig, err := newXMLConfig([]byte(manyLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse root xml-config")
 
 	configPart, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
@@ -364,7 +364,7 @@ func TestXmlGetConfigPartSectionFromRoot(t *testing.T) {
 }
 
 func TestXmlGetConfigPartSectionFromSection(t *testing.T) {
-	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	rootConfig, err := newXMLConfig([]byte(manyLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse root xml-config")
 
 	configSection, err := rootConfig.GetConfigPart("/xml/root/child/grandchild/first")
@@ -377,7 +377,7 @@ func TestXmlGetConfigPartSectionFromSection(t *testing.T) {
 }
 
 func TestXmlGetConfigPartWithLongPath(t *testing.T) {
-	rootConfig, err := newXmlConfig([]byte(manyLevelXmlConfig))
+	rootConfig, err := newXMLConfig([]byte(manyLevelXMLConfig))
 	require.NoError(t, err, "Cannot parse root xml-config")
 
 	configSection, err := rootConfig.GetConfigPart("/xml/root/child/grandchild")
@@ -391,7 +391,7 @@ func TestXmlGetConfigPartWithLongPath(t *testing.T) {
 }
 
 func TestXmlGetAbsentConfigPart(t *testing.T) {
-	config, err := newXmlConfig([]byte(`<xml element="asd"/>`))
+	config, err := newXMLConfig([]byte(`<xml element="asd"/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	_, err = config.GetConfigPart("/root")
