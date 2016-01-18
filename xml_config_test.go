@@ -90,7 +90,7 @@ func TestXmlGetEmptyStrings(t *testing.T) {
 	config, err := newXMLConfig([]byte(`<xml/>`))
 	require.NoError(t, err, "Cannot parse xml-config")
 
-	value, err := config.GetStrings("/xml", DefaultArrayDelimiter)
+	value, err := config.GetStrings("/xml", defaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
@@ -124,7 +124,7 @@ func TestXmlGrabValues(t *testing.T) {
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/xml/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/xml/intElements", defaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
@@ -150,7 +150,7 @@ func TestXmlGrabValuesOfSingleElement(t *testing.T) {
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/xml/intElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/xml/intElement", defaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
@@ -220,28 +220,28 @@ func TestXmlGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/xml/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetBools("/xml/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetInts("/xml/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/xml/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/xml/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetBools("/xml/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetInts("/xml/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/xml/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/xml/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetInt("/xml/floatElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/xml/floatElements", DefaultArrayDelimiter)
+	_, err = config.GetInts("/xml/floatElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
@@ -264,7 +264,7 @@ func TestXmlGrabAbsentValues(t *testing.T) {
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	executed := false
-	err = config.GrabValues("/xml/absentElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/xml/absentElement", defaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -292,7 +292,7 @@ func TestXmlGrabValuesPassError(t *testing.T) {
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	expectedError := errors.New("TestXmlGrabValuesPassError error")
-	err = config.GrabValues("/xml/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/xml/intElements", defaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError

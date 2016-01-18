@@ -100,7 +100,7 @@ func checkTimeValue(t *testing.T, value interface{}) {
 
 // Test helpers for array values.
 func getStringValues(config Config, path string) (interface{}, error) {
-	return config.GetStrings(path, DefaultArrayDelimiter)
+	return config.GetStrings(path, defaultArrayDelimiter)
 }
 
 func checkStringValues(t *testing.T, value interface{}) {
@@ -108,7 +108,7 @@ func checkStringValues(t *testing.T, value interface{}) {
 }
 
 func getBoolValues(config Config, path string) (interface{}, error) {
-	return config.GetBools(path, DefaultArrayDelimiter)
+	return config.GetBools(path, defaultArrayDelimiter)
 }
 
 func checkBoolValues(t *testing.T, value interface{}) {
@@ -116,7 +116,7 @@ func checkBoolValues(t *testing.T, value interface{}) {
 }
 
 func getFloatValues(config Config, path string) (interface{}, error) {
-	return config.GetFloats(path, DefaultArrayDelimiter)
+	return config.GetFloats(path, defaultArrayDelimiter)
 }
 
 func checkFloatValues(t *testing.T, value interface{}) {
@@ -124,7 +124,7 @@ func checkFloatValues(t *testing.T, value interface{}) {
 }
 
 func getIntValues(config Config, path string) (interface{}, error) {
-	return config.GetInts(path, DefaultArrayDelimiter)
+	return config.GetInts(path, defaultArrayDelimiter)
 }
 
 func checkIntValues(t *testing.T, value interface{}) {
@@ -132,7 +132,7 @@ func checkIntValues(t *testing.T, value interface{}) {
 }
 
 func getDurationValues(config Config, path string) (interface{}, error) {
-	return GetDurations(config, path, DefaultArrayDelimiter)
+	return GetDurations(config, path, defaultArrayDelimiter)
 }
 
 func checkDurationValues(t *testing.T, value interface{}) {
@@ -140,7 +140,7 @@ func checkDurationValues(t *testing.T, value interface{}) {
 }
 
 func getTimeValues(config Config, path string) (interface{}, error) {
-	return GetTimes(config, path, DefaultArrayDelimiter)
+	return GetTimes(config, path, defaultArrayDelimiter)
 }
 
 func checkTimeValues(t *testing.T, value interface{}) {

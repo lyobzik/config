@@ -64,7 +64,7 @@ func TestIniGetEmptyStrings(t *testing.T) {
 	config, err := newINIConfig([]byte("element="))
 	require.NoError(t, err, "Cannot parse ini-config")
 
-	value, err := config.GetStrings("/element", DefaultArrayDelimiter)
+	value, err := config.GetStrings("/element", defaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
@@ -98,7 +98,7 @@ func TestIniGrabValues(t *testing.T) {
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElements", defaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
@@ -124,7 +124,7 @@ func TestIniGrabValuesOfSingleElement(t *testing.T) {
 
 	var intValues []int64
 	var isStringData bool
-	err = config.GrabValues("/intElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElement", defaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			var stringData string
@@ -231,22 +231,22 @@ func TestIniGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetBools("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetInts("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetBools("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetInts("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
@@ -269,7 +269,7 @@ func TestIniGrabAbsentValues(t *testing.T) {
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	executed := false
-	err = config.GrabValues("/absentElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/absentElement", defaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -297,7 +297,7 @@ func TestIniGrabValuesPassError(t *testing.T) {
 	require.NoError(t, err, "Cannot parse ini-config")
 
 	expectedError := errors.New("TestIniGrabValuesPassError error")
-	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElements", defaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError

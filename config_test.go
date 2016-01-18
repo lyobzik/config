@@ -50,7 +50,7 @@ func TestCreateConfigFromReader(t *testing.T) {
 }
 
 func TestTimeDefaultLoader(t *testing.T) {
-	loader, exist := DefaultLoaders["time.Time"]
+	loader, exist := defaultLoaders["time.Time"]
 	require.True(t, exist, "Cannot found loader for time.Time")
 
 	loadedValue, err := loader(expectedTimeValue.Format(time.RFC3339))
@@ -65,7 +65,7 @@ func TestTimeDefaultLoader(t *testing.T) {
 }
 
 func TestDurationDefaultLoader(t *testing.T) {
-	loader, exist := DefaultLoaders["time.Duration"]
+	loader, exist := defaultLoaders["time.Duration"]
 	require.True(t, exist, "Cannot found loader for time.Duration")
 
 	loadedValue, err := loader(expectedDurationValue.String())

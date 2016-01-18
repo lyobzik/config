@@ -7,11 +7,11 @@ import (
 
 const (
 	// PathDelimiter default path delimiter.
-	PathDelimiter = "/"
+	pathDelimiter = "/"
 	// DefaultArrayDelimiter default array delimiter.
-	DefaultArrayDelimiter = " "
+	defaultArrayDelimiter = " "
 	// TagKey tag name of structure fields.
-	TagKey = "config"
+	tagKey = "config"
 )
 
 // Heplers.
@@ -33,7 +33,7 @@ func getConfigCreator(configType string) (configCreator, error) {
 func filterPathParts(pathParts []string) []string {
 	filteredPathParts := make([]string, 0, len(pathParts))
 	for _, pathPart := range pathParts {
-		if len(pathPart) > 0 && pathPart != PathDelimiter {
+		if len(pathPart) > 0 && pathPart != pathDelimiter {
 			filteredPathParts = append(filteredPathParts, pathPart)
 		}
 	}
@@ -41,17 +41,17 @@ func filterPathParts(pathParts []string) []string {
 }
 
 func splitPath(path string) []string {
-	pathParts := strings.Split(path, PathDelimiter)
+	pathParts := strings.Split(path, pathDelimiter)
 	return filterPathParts(pathParts)
 }
 
 func joinPath(pathParts ...string) string {
 	pathParts = filterPathParts(pathParts)
-	path := strings.Join(pathParts, PathDelimiter)
-	if strings.HasPrefix(path, PathDelimiter) {
+	path := strings.Join(pathParts, pathDelimiter)
+	if strings.HasPrefix(path, pathDelimiter) {
 		return path
 	}
-	return PathDelimiter + path
+	return pathDelimiter + path
 }
 
 // Load value implementations.
@@ -180,7 +180,7 @@ func loadSlice(values []string, settings LoadSettings, value reflect.Value,
 
 func getFieldName(value reflect.Value, i int) string {
 	fieldType := value.Type().Field(i)
-	fieldName := fieldType.Tag.Get(TagKey)
+	fieldName := fieldType.Tag.Get(tagKey)
 	if len(fieldName) != 0 {
 		return fieldName
 	}

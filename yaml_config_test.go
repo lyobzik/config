@@ -76,7 +76,7 @@ func TestYamlGetEmptyStrings(t *testing.T) {
 	config, err := newYAMLConfig([]byte("stringElements: []"))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	value, err := config.GetStrings("/stringElements", DefaultArrayDelimiter)
+	value, err := config.GetStrings("/stringElements", defaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 
 	require.Empty(t, value)
@@ -90,7 +90,7 @@ func TestYamlGetFloatAsInt(t *testing.T) {
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValue, int64(1))
 
-	intValues, err := config.GetInts("/intElements", DefaultArrayDelimiter)
+	intValues, err := config.GetInts("/intElements", defaultArrayDelimiter)
 	require.NoError(t, err, "Cannot get value")
 	require.Equal(t, intValues, []int64{1, 2, 3})
 }
@@ -116,7 +116,7 @@ func TestYamlGrabValues(t *testing.T) {
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	var intValues []int64
-	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElements", defaultArrayDelimiter,
 		func(length int) { intValues = make([]int64, 0, length) },
 		func(data interface{}) error {
 			value, err := parseYAMLInt(data)
@@ -173,34 +173,34 @@ func TestYamlGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElement", DefaultArrayDelimiter)
+	_, err = config.GetStrings("/intElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetBools("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetInts("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElement", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElements", DefaultArrayDelimiter)
+	_, err = config.GetStrings("/intElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetBools("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetBools("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetInts("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetFloats("/stringElements", DefaultArrayDelimiter)
+	_, err = config.GetFloats("/stringElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetInt("/floatElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetInts("/floatElements", DefaultArrayDelimiter)
+	_, err = config.GetInts("/floatElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 }
 
@@ -223,7 +223,7 @@ func TestYamlGrabAbsentValues(t *testing.T) {
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	executed := false
-	err = config.GrabValues("/absentElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/absentElement", defaultArrayDelimiter,
 		func(length int) { executed = true },
 		func(data interface{}) error {
 			executed = true
@@ -251,7 +251,7 @@ func TestYamlGrabValuesPassError(t *testing.T) {
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	expectedError := errors.New("TestYamlGrabValuesPassError error")
-	err = config.GrabValues("/intElements", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElements", defaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return expectedError
@@ -264,7 +264,7 @@ func TestYamlGrabValuesOfSingleElement(t *testing.T) {
 	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
 
-	err = config.GrabValues("/intElement", DefaultArrayDelimiter,
+	err = config.GrabValues("/intElement", defaultArrayDelimiter,
 		func(length int) {},
 		func(data interface{}) error {
 			return nil
