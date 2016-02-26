@@ -234,6 +234,13 @@ type LoadSettings struct {
 	Loaders map[string]StringValueLoader
 }
 
+// GetDefaultLoadSettings returns settings that may be used to load value from config.
+func GetDefaultLoadSettings(ignoreErrors bool) LoadSettings {
+	return LoadSettings{Delim: defaultArrayDelimiter,
+		IgnoreErrors: ignoreErrors,
+		Loaders:      defaultLoaders}
+}
+
 var (
 	defaultLoaders = map[string]StringValueLoader{
 		"time.Time": func(data string) (reflect.Value, error) {
@@ -274,10 +281,7 @@ func LoadValueIgnoringErrors(c Config, path string, value interface{}) (err erro
 func parametrizedLoadValue(c Config, ignoreErrors bool, path string,
 	value interface{}) (err error) {
 
-	settings := LoadSettings{Delim: defaultArrayDelimiter,
-		IgnoreErrors: ignoreErrors,
-		Loaders:      defaultLoaders}
-	return TunedLoadValue(c, settings, path, value)
+	return TunedLoadValue(c, GetDefaultLoadSettings(ignoreErrors), path, value)
 }
 
 // TunedLoadValue loads value from config to variable using specified settings. Argument 'value'
