@@ -91,11 +91,11 @@ func loadSingleValue(c Config, settings LoadSettings, path string, value reflect
 		value, err := c.GetBool(path)
 		return reflect.ValueOf(value), err
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		value, err := c.GetInt(path)
-		return reflect.ValueOf(value), err
+		resultValue, err := c.GetInt(path)
+		return reflect.ValueOf(resultValue).Convert(value.Type()), err
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		value, err := c.GetInt(path)
-		return reflect.ValueOf(uint64(value)), err
+		resultValue, err := c.GetInt(path)
+		return reflect.ValueOf(uint64(resultValue)).Convert(value.Type()), err
 	case reflect.Float32, reflect.Float64:
 		value, err := c.GetFloat(path)
 		return reflect.ValueOf(value), err
