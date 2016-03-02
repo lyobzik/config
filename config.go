@@ -19,7 +19,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"reflect"
 	"time"
 )
@@ -91,7 +90,7 @@ type Config interface {
 
 // ReadConfig reads and parses config from file. Config type is detected by file extension.
 func ReadConfig(configPath string) (Config, error) {
-	return ReadTypedConfig(configPath, path.Ext(configPath))
+	return ReadTypedConfig(configPath, getConfigType(configPath))
 }
 
 // ReadTypedConfig reads and parses config from file of specified type.

@@ -31,6 +31,34 @@ var (
 )
 
 // Tests.
+func TestGetConfigType(t *testing.T) {
+	for _, expectedType := range []string{CONF, INI, JSON, XML, YAML, YML} {
+		configType1 := getConfigType("/etc/config." + expectedType)
+		require.Equal(t, expectedType, configType1)
+		configType2 := getConfigType("/etc/c.o.n.f.i.g." + expectedType)
+		require.Equal(t, expectedType, configType2)
+		configType3 := getConfigType("/etc/." + expectedType)
+		require.Equal(t, expectedType, configType3)
+		configType4 := getConfigType("config." + expectedType)
+		require.Equal(t, expectedType, configType4)
+		configType5 := getConfigType("." + expectedType)
+		require.Equal(t, expectedType, configType5)
+	}
+
+	for _, expectedType := range []string{CONF, INI, JSON, XML, YAML, YML} {
+		configType1 := getConfigType("/etc/" + expectedType)
+		require.Equal(t, "", configType1)
+		configType2 := getConfigType("/etc/.")
+		require.Equal(t, "", configType2)
+		configType3 := getConfigType(expectedType)
+		require.Equal(t, "", configType3)
+		configType4 := getConfigType(".")
+		require.Equal(t, "", configType4)
+		configType5 := getConfigType("")
+		require.Equal(t, "", configType5)
+	}
+}
+
 func TestCreatedConfigTypes(t *testing.T) {
 	conf, err := CreateConfigFromString("", CONF)
 	require.NoError(t, err, "Cannot create conf-config")

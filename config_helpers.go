@@ -15,6 +15,7 @@
 package config
 
 import (
+	"path"
 	"reflect"
 	"strings"
 )
@@ -66,6 +67,14 @@ func joinPath(pathParts ...string) string {
 		return path
 	}
 	return pathDelimiter + path
+}
+
+func getConfigType(configPath string) string {
+	extension := path.Ext(configPath)
+	if len(extension) != 0 {
+		extension = extension[1:]
+	}
+	return extension
 }
 
 // Load value implementations.
