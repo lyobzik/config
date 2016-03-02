@@ -75,6 +75,17 @@ func TestManyLevelYaml(t *testing.T) {
 	}
 }
 
+func TestOneLevelYamlLoadValue(t *testing.T) {
+	config, err := newYAMLConfig([]byte(oneLevelYAMLConfig))
+	require.NoError(t, err, "Cannot parse yaml-config")
+
+	value := configData{}
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value from config")
+
+	value.Check(t)
+}
+
 func TestManyLevelYamlLoadValue(t *testing.T) {
 	config, err := newYAMLConfig([]byte(manyLevelYAMLConfig))
 	require.NoError(t, err, "Cannot parse yaml-config")
