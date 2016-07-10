@@ -99,15 +99,13 @@ func loadSingleValue(c Config, settings LoadSettings, path string, value reflect
 	case reflect.Bool:
 		value, err := c.GetBool(path)
 		return reflect.ValueOf(value), err
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		resultValue, err := c.GetInt(path)
 		return reflect.ValueOf(resultValue).Convert(value.Type()), err
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		resultValue, err := c.GetInt(path)
-		return reflect.ValueOf(uint64(resultValue)).Convert(value.Type()), err
 	case reflect.Float32, reflect.Float64:
-		value, err := c.GetFloat(path)
-		return reflect.ValueOf(value), err
+		resultValue, err := c.GetFloat(path)
+		return reflect.ValueOf(resultValue).Convert(value.Type()), err
 	case reflect.String:
 		value, err := c.GetString(path)
 		return reflect.ValueOf(value), err
@@ -132,15 +130,14 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 		return reflect.ValueOf(value), err
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		value, err := c.GetInts(path, settings.Delim)
-		return reflect.ValueOf(value), err
+		return copySlice(err, reflect.ValueOf(value), elementType), err
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		value, err := c.GetInts(path, settings.Delim)
-		convertedValue := make([]uint64, len(value))
-		for i := range value {
-			convertedValue[i] = uint64(value[i])
-		}
-		return reflect.ValueOf(convertedValue), err
-	case reflect.Float32, reflect.Float64:
+		return copySlice(err, reflect.ValueOf(value), elementType), err
+	case reflect.Float32:
+		value, err := c.GetFloats(path, settings.Delim)
+		return copySlice(err, reflect.ValueOf(value), elementType), err
+	case reflect.Float64:
 		value, err := c.GetFloats(path, settings.Delim)
 		return reflect.ValueOf(value), err
 	case reflect.String:
@@ -199,6 +196,18 @@ func loadSlice(values []string, settings LoadSettings, value reflect.Value,
 		}
 	}
 	return outputValues, err
+}
+
+func copySlice(err error, srcSlice reflect.Value, dstSliceElemType reflect.Type) reflect.Value {
+	var dstSlice reflect.Value
+	if err == nil {
+		dstSlice = reflect.MakeSlice(reflect.SliceOf(dstSliceElemType),
+			srcSlice.Len(), srcSlice.Len())
+		for i := 0; i < srcSlice.Len(); i += 1 {
+			dstSlice.Index(i).Set(srcSlice.Index(i).Convert(dstSliceElemType))
+		}
+	}
+	return dstSlice
 }
 
 func getFieldName(value reflect.Value, i int) string {

@@ -25,6 +25,8 @@ var (
 	expectedStringValue = "value"
 	expectedBoolValue   = true
 	expectedFloatValue  = 1.23456
+	expectedInt8Value   = int8(123)
+	expectedInt16Value  = int16(12345)
 	expectedIntValue    = int64(123456)
 
 	expectedDurationValue = parseExpectedDurations("2h45m5s150ms")[0]
@@ -33,6 +35,7 @@ var (
 	expectedStringValues = []string{"value1", "value2", "value3"}
 	expectedBoolValues   = []bool{true, false, true}
 	expectedFloatValues  = []float64{1.23, 4.56, 7.89}
+	expectedInt8Values   = []int8{12, 34, 78}
 	expectedIntValues    = []int64{123, 456, 789}
 
 	expectedDurationValues = parseExpectedDurations("1h", "1h15m30s450ms", "1s750ms")
@@ -85,7 +88,7 @@ func getFloatValue(config Config, path string) (interface{}, error) {
 }
 
 func checkFloatValue(t *testing.T, value interface{}) {
-	checkEqual(t, value, expectedFloatValue)
+	require.InDelta(t, expectedFloatValue, value, 1e-5)
 }
 
 func getIntValue(config Config, path string) (interface{}, error) {
@@ -134,7 +137,7 @@ func getFloatValues(config Config, path string) (interface{}, error) {
 }
 
 func checkFloatValues(t *testing.T, value interface{}) {
-	checkEqual(t, value, expectedFloatValues)
+	require.InDeltaSlice(t, expectedFloatValues, value, 1e-5)
 }
 
 func getIntValues(config Config, path string) (interface{}, error) {

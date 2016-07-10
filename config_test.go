@@ -17,6 +17,7 @@ package config
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -328,4 +329,195 @@ func TestLoadValueWithLoadableFieldLoadError(t *testing.T) {
 	var value StructWithLoadableField
 	err = LoadValue(config, "/", &value)
 	require.EqualError(t, err, errorForTestLoadLoadableValue.Error())
+}
+
+// Test loading numeric types.
+func loadValidValueFromConfig(t *testing.T, configContent, path string, value interface{}) {
+	config, err := CreateConfigFromString(configContent, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	err = LoadValue(config, "/", value)
+	require.NoError(t, err, "Cannot load value from config")
+}
+
+func loadValidValue(t *testing.T, expectedValue interface{}, value interface{}) {
+	config := fmt.Sprintf(`{"Value": %v}`, expectedValue)
+	loadValidValueFromConfig(t, config, "/", value)
+}
+
+func TestLoadIntValue(t *testing.T) {
+	var value struct{ Value int }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, int64(value.Value))
+}
+
+func TestLoadInt8Value(t *testing.T) {
+	var value struct{ Value int8 }
+	loadValidValue(t, expectedInt8Value, &value)
+	checkEqual(t, value.Value, expectedInt8Value)
+}
+
+func TestLoadInt16Value(t *testing.T) {
+	var value struct{ Value int16 }
+	loadValidValue(t, expectedInt16Value, &value)
+	checkEqual(t, value.Value, expectedInt16Value)
+}
+
+func TestLoadInt32Value(t *testing.T) {
+	var value struct{ Value int32 }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, int64(value.Value))
+}
+
+func TestLoadInt64Value(t *testing.T) {
+	var value struct{ Value int64 }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, value.Value)
+}
+
+func TestLoadUIntValue(t *testing.T) {
+	var value struct{ Value int }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, int64(value.Value))
+}
+
+func TestLoadUInt8Value(t *testing.T) {
+	var value struct{ Value uint8 }
+	loadValidValue(t, expectedInt8Value, &value)
+	checkEqual(t, value.Value, uint8(expectedInt8Value))
+}
+
+func TestLoadUInt16Value(t *testing.T) {
+	var value struct{ Value uint16 }
+	loadValidValue(t, expectedInt16Value, &value)
+	checkEqual(t, value.Value, uint16(expectedInt16Value))
+}
+
+func TestLoadUInt32Value(t *testing.T) {
+	var value struct{ Value uint32 }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, int64(value.Value))
+}
+
+func TestLoadUInt64Value(t *testing.T) {
+	var value struct{ Value uint64 }
+	loadValidValue(t, expectedIntValue, &value)
+	checkIntValue(t, int64(value.Value))
+}
+
+func TestLoadFloat32Value(t *testing.T) {
+	var value struct{ Value float32 }
+	loadValidValue(t, expectedFloatValue, &value)
+	checkFloatValue(t, float64(value.Value))
+}
+
+func TestLoadFloat64Value(t *testing.T) {
+	var value struct{ Value float64 }
+	loadValidValue(t, expectedFloatValue, &value)
+	checkFloatValue(t, value.Value)
+}
+
+// Test loading slice of numeric types.
+func loadValidValues(t *testing.T, value interface{}, expectedValues reflect.Value) {
+	stringExpectedValues := make([]string, expectedValues.Len())
+	for i := 0; i < expectedValues.Len(); i += 1 {
+		stringExpectedValues[i] = fmt.Sprintf("%v", expectedValues.Index(i).Interface())
+	}
+	config := fmt.Sprintf(`{"Values": [%s]}`, strings.Join(stringExpectedValues, ", "))
+	loadValidValueFromConfig(t, config, "/", value)
+}
+
+func convertToInt64Slice(values reflect.Value) []int64 {
+	result := make([]int64, values.Len())
+	for i := 0; i < values.Len(); i += 1 {
+		result[i] = values.Index(i).Convert(reflect.TypeOf(int64(0))).Int()
+	}
+	return result
+}
+
+func TestLoadIntValues(t *testing.T) {
+	var value struct{ Values []int }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadInt8Values(t *testing.T) {
+	var value struct{ Values []int8 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedInt8Values))
+	checkEqual(t, value.Values, expectedInt8Values)
+}
+
+func TestLoadInt16Values(t *testing.T) {
+	var value struct{ Values []int16 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadInt32Values(t *testing.T) {
+	var value struct{ Values []int32 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadInt64Values(t *testing.T) {
+	var value struct{ Values []int64 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadUIntValues(t *testing.T) {
+	var value struct{ Values []uint }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadUInt8Values(t *testing.T) {
+	var value struct{ Values []uint8 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedInt8Values))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	expectedValues := convertToInt64Slice(reflect.ValueOf(expectedInt8Values))
+	checkEqual(t, values, expectedValues)
+}
+
+func TestLoadUInt16Values(t *testing.T) {
+	var value struct{ Values []uint16 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadUInt32Values(t *testing.T) {
+	var value struct{ Values []uint32 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadUInt64Values(t *testing.T) {
+	var value struct{ Values []uint64 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedIntValues))
+	values := convertToInt64Slice(reflect.ValueOf(value.Values))
+	checkIntValues(t, values)
+}
+
+func TestLoadFloat32Values(t *testing.T) {
+	var value struct{ Values []float32 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedFloatValues))
+
+	values := make([]float64, 0)
+	for _, value := range value.Values {
+		values = append(values, float64(value))
+	}
+	checkFloatValues(t, values)
+}
+
+func TestLoadFloat64Values(t *testing.T) {
+	var value struct{ Values []float64 }
+	loadValidValues(t, &value, reflect.ValueOf(expectedFloatValues))
+	checkFloatValues(t, value.Values)
 }
