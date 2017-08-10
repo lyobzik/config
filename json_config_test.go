@@ -174,9 +174,6 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 	config, err := newJSONConfig([]byte(oneLevelJSONConfig))
 	require.NoError(t, err, "Cannot parse json-config")
 
-	_, err = config.GetString("/intElement")
-	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
-
 	_, err = config.GetBool("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
@@ -186,9 +183,6 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 	_, err = config.GetFloat("/stringElement")
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
-	_, err = config.GetStrings("/intElement", defaultArrayDelimiter)
-	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
-
 	_, err = config.GetBools("/stringElement", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
@@ -196,9 +190,6 @@ func TestJsonGetValueOfIncorrectType(t *testing.T) {
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetFloats("/stringElement", defaultArrayDelimiter)
-	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
-
-	_, err = config.GetStrings("/intElements", defaultArrayDelimiter)
 	require.Error(t, err, ErrorIncorrectValueType.Error(), "Incorrect value parsed successfully")
 
 	_, err = config.GetBools("/stringElements", defaultArrayDelimiter)
@@ -301,8 +292,13 @@ func TestParseJsonString(t *testing.T) {
 	require.NoError(t, err, "Cannot parse json string")
 	checkStringValue(t, value)
 
-	_, err = parseJSONString(expectedIntValue)
-	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+	for _, expected := range []interface{}{expectedBoolValue,
+		expectedFloatValue, expectedInt8Value, expectedInt16Value, expectedIntValue} {
+
+		value, err = parseJSONString(expected)
+		require.NoError(t, err, fmt.Sprintf("Cannot parse value %v as string", expected))
+		require.Equal(t, fmt.Sprintf("%v", expected), value)
+	}
 
 	_, err = parseJSONString(expectedStringValues)
 	require.EqualError(t, err, ErrorIncorrectValueType.Error())
