@@ -82,8 +82,7 @@ func loadValue(c Config, settings LoadSettings, path string, value reflect.Value
 	var loadedValue reflect.Value
 	if loadedValue, err = loadSingleValue(c, settings, path, value); err == nil {
 		value.Set(loadedValue)
-	}
-	if settings.IgnoreErrors {
+	} else if err == ErrorNotFound && settings.IgnoreMissingFieldErrors {
 		return nil
 	}
 	return err
@@ -93,6 +92,8 @@ func loadSingleValue(c Config, settings LoadSettings, path string, value reflect
 	if loader := getCustomLoader(c, settings, value.Type()); loader != nil {
 		if data, err := c.GetString(path); err == nil {
 			return loader(data, value)
+		} else {
+			return reflect.ValueOf(nil), err
 		}
 	}
 	switch value.Kind() {
@@ -122,6 +123,8 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 	if loader := getCustomLoader(c, settings, elementType); loader != nil {
 		if values, err := c.GetStrings(path, settings.Delim); err == nil {
 			return loadSlice(values, settings, value, loader)
+		} else {
+			return reflect.ValueOf(nil), err
 		}
 	}
 	switch elementType.Kind() {
@@ -150,7 +153,7 @@ func loadSliceValue(c Config, settings LoadSettings, path string, value reflect.
 func loadStructValueByFields(c Config, settings LoadSettings, path string,
 	value reflect.Value) (result reflect.Value, err error) {
 
-	for i := 0; i < value.NumField() && (err == nil || settings.IgnoreErrors); i++ {
+	for i := 0; i < value.NumField() && (err == nil || (err == ErrorNotFound && settings.IgnoreMissingFieldErrors)); i++ {
 		fieldValue := value.Field(i)
 		fieldPath := joinPath(path, getFieldName(value, i))
 		err = loadValue(c, settings, fieldPath, fieldValue)

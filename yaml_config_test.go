@@ -91,7 +91,7 @@ func TestManyLevelYamlLoadValue(t *testing.T) {
 	require.NoError(t, err, "Cannot parse yaml-config")
 
 	value := configData{}
-	err = LoadValueIgnoringErrors(config, "/root/child/grandchild/first", &value)
+	err = LoadValueIgnoringMissingFieldErrors(config, "/root/child/grandchild/first", &value)
 	require.NoError(t, err, "Cannot load value from config")
 
 	value.Check(t)
