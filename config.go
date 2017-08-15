@@ -229,17 +229,17 @@ type StringValueLoader func(string) (reflect.Value, error)
 type LoadSettings struct {
 	// Delimiter that will be used to split array into separate elements.
 	Delim string
-	// Flag that specifies whether to ignore errors.
-	IgnoreErrors bool
+	// Flag that specifies whether to ignore missing field errors.
+	IgnoreMissingFieldErrors bool
 	// Custom loaders.
 	Loaders map[string]StringValueLoader
 }
 
 // GetDefaultLoadSettings returns settings that may be used to load value from config.
-func GetDefaultLoadSettings(ignoreErrors bool) LoadSettings {
+func GetDefaultLoadSettings(ignoreMissingFieldErrors bool) LoadSettings {
 	return LoadSettings{Delim: defaultArrayDelimiter,
-		IgnoreErrors: ignoreErrors,
-		Loaders:      defaultLoaders}
+		IgnoreMissingFieldErrors: ignoreMissingFieldErrors,
+		Loaders:                  defaultLoaders}
 }
 
 var (
@@ -269,20 +269,20 @@ func LoadValue(c Config, path string, value interface{}) (err error) {
 	return parametrizedLoadValue(c, false, path, value)
 }
 
-// LoadValueIgnoringErrors loads value from config to variable ignoring some errors (parsing
+// LoadValueIgnoringMissingFieldErrors loads value from config to variable ignoring some errors (parsing
 // errors, absent value, and etc). Argument 'value' must be pointer. Function can load simple
 // types (bool, int, uint, float, string), arrays of simple types and structure. Structure can
 // be loaded field by field, in this case for path construction in first place used tag 'config',
 // in second--name of field. Also structure can be loaded using custom loader (of type
 // 'StringValueLoader') or 'Loadable' interface.
-func LoadValueIgnoringErrors(c Config, path string, value interface{}) (err error) {
+func LoadValueIgnoringMissingFieldErrors(c Config, path string, value interface{}) (err error) {
 	return parametrizedLoadValue(c, true, path, value)
 }
 
-func parametrizedLoadValue(c Config, ignoreErrors bool, path string,
+func parametrizedLoadValue(c Config, ignoreMissingFieldErrors bool, path string,
 	value interface{}) (err error) {
 
-	return TunedLoadValue(c, GetDefaultLoadSettings(ignoreErrors), path, value)
+	return TunedLoadValue(c, GetDefaultLoadSettings(ignoreMissingFieldErrors), path, value)
 }
 
 // TunedLoadValue loads value from config to variable using specified settings. Argument 'value'

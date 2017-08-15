@@ -17,6 +17,7 @@ package config
 import (
 	"encoding/json"
 	"math"
+	"fmt"
 )
 
 type jsonConfig struct {
@@ -159,10 +160,18 @@ func (c *jsonConfig) findElement(path string) (interface{}, error) {
 
 // Json value parsers.
 func parseJSONString(data interface{}) (value string, err error) {
-	if value, converted := data.(string); converted {
-		return value, err
+	switch dataValue := data.(type) {
+	case string:
+		return dataValue, nil
+	case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+		return fmt.Sprintf("%d", dataValue), nil
+	case float32, float64:
+		return fmt.Sprintf("%g", dataValue), nil
+	case bool:
+		return fmt.Sprintf("%t", dataValue), nil
+	default:
+		return value, ErrorIncorrectValueType
 	}
-	return value, ErrorIncorrectValueType
 }
 
 func parseJSONBool(data interface{}) (value bool, err error) {

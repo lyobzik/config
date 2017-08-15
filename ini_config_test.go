@@ -68,7 +68,7 @@ func TestTwoLevelIniLoadValue(t *testing.T) {
 	require.Nil(t, err, "Cannot parse ini-config")
 
 	value := configData{}
-	err = LoadValueIgnoringErrors(config, "/first", &value)
+	err = LoadValueIgnoringMissingFieldErrors(config, "/first", &value)
 	require.Nil(t, err, "Cannot load value from config")
 
 	value.Check(t)
@@ -371,7 +371,7 @@ func TestIniGetConfigPartSectionFromRoot(t *testing.T) {
 	require.Nil(t, err, "Cannot parse expected ini-config")
 
 	expectedValue := configData{}
-	err = LoadValueIgnoringErrors(expectedConfig, "/", &expectedValue)
+	err = LoadValueIgnoringMissingFieldErrors(expectedConfig, "/", &expectedValue)
 	require.Nil(t, err, "Cannot load value from expected ini-config")
 
 	rootConfig, err := newINIConfig([]byte(twoLevelINIConfig))
@@ -381,7 +381,7 @@ func TestIniGetConfigPartSectionFromRoot(t *testing.T) {
 	require.Nil(t, err, "Cannot get config part")
 
 	value := configData{}
-	err = LoadValueIgnoringErrors(configPart, "/", &value)
+	err = LoadValueIgnoringMissingFieldErrors(configPart, "/", &value)
 	require.Nil(t, err, "Cannot load value from ini-config")
 
 	require.Equal(t, value, expectedValue, "Not equal configs")

@@ -167,7 +167,7 @@ func TestLoadEmptyConfig(t *testing.T) {
 	require.EqualError(t, err, ErrorNotFound.Error())
 	require.Equal(t, initValue, value, "Value must be unchanged")
 
-	err = LoadValueIgnoringErrors(config, "/", &value)
+	err = LoadValueIgnoringMissingFieldErrors(config, "/", &value)
 	require.NoError(t, err, "Cannot load value from config")
 	require.Equal(t, initValue, value, "Value must be unchanged")
 }
@@ -319,7 +319,7 @@ func TestLoadValueWithLoadableFieldIncorrectType(t *testing.T) {
 
 	var value StructWithLoadableField
 	err = LoadValue(config, "/", &value)
-	require.EqualError(t, err, ErrorNotFound.Error())
+	require.EqualError(t, err, errorForTestLoadLoadableValue.Error())
 }
 
 func TestLoadValueWithLoadableFieldLoadError(t *testing.T) {

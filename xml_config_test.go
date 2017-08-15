@@ -84,7 +84,7 @@ func TestManyLevelXmlLoadValue(t *testing.T) {
 	require.NoError(t, err, "Cannot parse xml-config")
 
 	value := configData{}
-	err = LoadValueIgnoringErrors(config, "/xml/root/child/grandchild/first", &value)
+	err = LoadValueIgnoringMissingFieldErrors(config, "/xml/root/child/grandchild/first", &value)
 	require.NoError(t, err, "Cannot load value from config")
 
 	value.Check(t)
