@@ -200,6 +200,34 @@ func TestLoadValueWithUnsignedIntegerSlice(t *testing.T) {
 	checkEqual(t, value.UnsignedElements, []uint64{123, 456, 789})
 }
 
+type StructWithPtrToUnsignedIntegerField struct {
+	UnsignedElement *uint64 `config:"unsignedElement"`
+}
+
+func TestLoadValueWithPtrToUnsignedIntegerField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"unsignedElement": 123456}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithPtrToUnsignedIntegerField
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unsigned field")
+	checkEqual(t, *value.UnsignedElement, uint64(123456))
+}
+
+type StructWithPtrToStructField struct {
+	StructElement *StructWithPtrToUnsignedIntegerField `config:"structElement"`
+}
+
+func TestLoadValueWithPtrToStructField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"structElement": {"unsignedElement": 123456}}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithPtrToStructField
+	err = LoadValue(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unsigned field")
+	checkEqual(t, *value.StructElement.UnsignedElement, uint64(123456))
+}
+
 type LoadableStruct struct {
 	IntElement   int64
 	FloatElement float64
@@ -275,7 +303,7 @@ func TestLoadValueToIncorrectVariable(t *testing.T) {
 }
 
 type StructWithIncorrectFieldType struct {
-	Value *int
+	Value interface{}
 }
 
 func TestLoadValueWithIncorrectFieldType(t *testing.T) {

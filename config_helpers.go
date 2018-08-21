@@ -116,6 +116,20 @@ func loadSingleValue(c Config, settings LoadSettings, path string, value reflect
 		return loadSliceValue(c, settings, path, value)
 	case reflect.Struct:
 		return loadStructValueByFields(c, settings, path, value)
+	case reflect.Ptr:
+		if _, err := c.GetConfigPart(path); err == ErrorNotFound {
+			return reflect.ValueOf(nil), err
+		}
+		if value.IsNil() {
+			value = reflect.New(value.Type().Elem())
+		}
+		loadedValue, err := loadSingleValue(c, settings, path, value.Elem())
+		if err != nil {
+			return reflect.ValueOf(nil), err
+		}
+		result := reflect.New(value.Type().Elem())
+		result.Elem().Set(loadedValue)
+		return result, nil
 	}
 	return reflect.ValueOf(nil), ErrorUnsupportedTypeToLoadValue
 }
