@@ -156,9 +156,10 @@ func loadStructValueByFields(c Config, settings LoadSettings, path string,
 	value reflect.Value) (result reflect.Value, err error) {
 
 	for i := 0; i < value.NumField() && (err == nil || (err == ErrorNotFound && settings.IgnoreMissingFieldErrors)); i++ {
-		fieldValue := value.Field(i)
-		fieldPath := joinPath(path, getFieldName(value, i))
-		err = loadValue(c, settings, fieldPath, fieldValue)
+		if fieldValue := value.Field(i); fieldValue.CanSet() {
+			fieldPath := joinPath(path, getFieldName(value, i))
+			err = loadValue(c, settings, fieldPath, fieldValue)
+		}
 	}
 	return value, err
 }
