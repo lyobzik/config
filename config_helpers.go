@@ -84,6 +84,8 @@ func loadValue(c Config, settings LoadSettings, path string, value reflect.Value
 		value.Set(loadedValue)
 	} else if err == ErrorNotFound && settings.IgnoreMissingFieldErrors {
 		return nil
+	} else if err == ErrorUnsupportedTypeToLoadValue && settings.IgnoreUnsupportedTypeErrors {
+		return nil
 	}
 	return err
 }

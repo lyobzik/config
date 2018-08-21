@@ -231,6 +231,8 @@ type LoadSettings struct {
 	Delim string
 	// Flag that specifies whether to ignore missing field errors.
 	IgnoreMissingFieldErrors bool
+	// Flag that specifies whether to ignore unsupported type errors.
+	IgnoreUnsupportedTypeErrors bool
 	// Custom loaders.
 	Loaders map[string]StringValueLoader
 }
@@ -239,6 +241,7 @@ type LoadSettings struct {
 func GetDefaultLoadSettings(ignoreMissingFieldErrors bool) LoadSettings {
 	return LoadSettings{Delim: defaultArrayDelimiter,
 		IgnoreMissingFieldErrors: ignoreMissingFieldErrors,
+		IgnoreUnsupportedTypeErrors: false,
 		Loaders:                  defaultLoaders}
 }
 
