@@ -214,6 +214,27 @@ func TestLoadValueWithPtrToUnsignedIntegerField(t *testing.T) {
 	checkEqual(t, *value.UnsignedElement, uint64(123456))
 }
 
+func TestLoadValueWithMissingPtrToUnsignedIntegerField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"notUnsignedElement": 123456}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var unsignedElement uint64 = 1234567
+	value := StructWithPtrToUnsignedIntegerField{UnsignedElement: &unsignedElement}
+	err = LoadValueIgnoringMissingFieldErrors(config, "/", &value)
+	require.NoError(t, err, "Cannot load value with unsigned field")
+	checkEqual(t, value.UnsignedElement, &unsignedElement)
+	checkEqual(t, *value.UnsignedElement, unsignedElement)
+}
+
+func TestLoadValueWithPtrToUnsignedIntegerFieldFromInvalidValueType(t *testing.T) {
+	config, err := CreateConfigFromString(`{"unsignedElement": "invalid type"}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithPtrToUnsignedIntegerField
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
+}
+
 type StructWithPtrToStructField struct {
 	StructElement *StructWithPtrToUnsignedIntegerField `config:"structElement"`
 }
@@ -315,6 +336,18 @@ func TestLoadValueWithIncorrectFieldType(t *testing.T) {
 	require.EqualError(t, err, ErrorUnsupportedTypeToLoadValue.Error())
 }
 
+func TestLoadValueWithIncorrectFieldTypeIgnoringErrors(t *testing.T) {
+	config, err := CreateConfigFromString("{}", JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithIncorrectFieldType
+
+	settings := GetDefaultLoadSettings(true)
+	settings.IgnoreUnsupportedTypeErrors = true
+	err = TunedLoadValue(config, settings, "/", &value)
+	require.NoError(t, err, "Cannot load config with unsupported fields")
+}
+
 type StructWithIncorrectSliceElementType struct {
 	Value []StructWithIncorrectFieldType
 }
@@ -357,6 +390,32 @@ func TestLoadValueWithLoadableFieldLoadError(t *testing.T) {
 	var value StructWithLoadableField
 	err = LoadValue(config, "/", &value)
 	require.EqualError(t, err, errorForTestLoadLoadableValue.Error())
+}
+
+type StructWithDurationField struct {
+	Value time.Duration `config:"nonexist_path"`
+}
+
+func TestLoadValueWithDurationField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Value": "1ms"}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithDurationField
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorNotFound.Error())
+}
+
+type StructWithDurationsField struct {
+	Values []time.Duration
+}
+
+func TestLoadValueWithDurationsField(t *testing.T) {
+	config, err := CreateConfigFromString(`{"Values": [{}, {}, {}]}`, JSON)
+	require.NoError(t, err, "Cannot load config")
+
+	var value StructWithDurationsField
+	err = LoadValue(config, "/", &value)
+	require.EqualError(t, err, ErrorIncorrectValueType.Error())
 }
 
 // Test loading numeric types.
